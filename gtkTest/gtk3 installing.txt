@@ -1,0 +1,9 @@
+cabal install alex
+cabal install happy
+cabal install glade
+cabal install gtk2hs-buildtools
+cabal install gtk gtk3
+
+when oyu install gtk2hs-buildtools it should throw and error about a missing package, install that one.
+
+use -XPackageImports flag when compiling with ghc
