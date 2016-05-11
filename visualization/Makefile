@@ -5,10 +5,10 @@
 
 HC=ghc
 
-BIN = tut
-SRCDIR != pwd
-BUILDDIR = ${SRCDIR}/build
-HSRC != ls *.hs
+BIN=main 
+SRCDIR!=pwd
+BUILDDIR=${SRCDIR}/build
+HSRC!=ls *.hs
 
 LDFLAGS=
 
