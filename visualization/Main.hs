@@ -64,17 +64,17 @@ import Data.Sequence
 main :: IO ()
 main = do
     initGUI
-    -- Store two mutable Num variables in an IO tuple
-    (xref, yref) <- (,) <$> newIORef 100 <*> newIORef 100 
-    currentStatusRef <- newIORef (Data.Sequence.empty :: Seq (Double, Double))
+    -- A counter which is incremented when the button is pressed.
+    counter <- newIORef 0
     -- The main window.
     window <- windowNew
     -- The button.
-    button <- buttonNewWithLabel "test"
+    button <- buttonNewWithLabel "test 0"
     containerAdd window button
     -- Increment the counter when the button is pressed.
     button `on` buttonActivated $ do
-        buttonSetLabel button ("test" ++ (show 2))
+        modifyIORef' counter (+1)
+        (readIORef counter) >>= (\num -> buttonSetLabel button ("test " ++ (show num)))
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
         liftIO $ mainQuit
