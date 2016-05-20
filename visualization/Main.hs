@@ -63,15 +63,21 @@ import Data.Sequence
 
 main :: IO ()
 main = do
-    print "test"
     initGUI
     -- Store two mutable Num variables in an IO tuple
     (xref, yref) <- (,) <$> newIORef 100 <*> newIORef 100 
     currentStatusRef <- newIORef (Data.Sequence.empty :: Seq (Double, Double))
+    -- The main window.
     window <- windowNew
+    -- The button.
     button <- buttonNewWithLabel "test"
     containerAdd window button
+    -- Increment the counter when the button is pressed.
+    button `on` buttonActivated $ do
+        buttonSetLabel button ("test" ++ (show 2))
+    -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
         liftIO $ mainQuit
+    -- Display the window
     widgetShowAll window
     mainGUI
