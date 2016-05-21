@@ -52,7 +52,7 @@
 -- or write to the Free Software Foundation, Inc., 51 Franklin Street,
 -- Fifth Floor, Boston, MA  02110-1301, USA.
 
-module Main where
+module Main (main) where
 
 import Graphics.UI.Gtk
 
@@ -94,16 +94,20 @@ redraw window num = do
 
 createDrawing :: (Window -> IORef Int -> IO ())
 createDrawing window x = do
-    box <- hBoxNew True 10
-    frame1 <- createFrame $ Just "C"
-    frame2 <- createFrame $ Just "Assembly"
-    frame3 <- createFrame $ Just "Ram and Registers"
-    frame4 <- createFrame $ Nothing 
-    containerAdd box frame1
-    containerAdd box frame2
-    containerAdd box frame3
-    containerAdd box frame4
-    containerAdd window box
+    hbox   <- hBoxNew True 10
+    c      <- createFrame $ Just "C"
+    ass    <- createFrame $ Just "Assembly"
+    ram    <- createFrame $ Just "Ram and Registers"
+    vbox   <- vBoxNew True 10
+    stdin  <- createFrame $ Just "Stdin"
+    stdout <- createFrame $ Just "Stdout"
+    containerAdd hbox c
+    containerAdd hbox ass
+    containerAdd hbox ram
+    containerAdd vbox stdin
+    containerAdd vbox stdout
+    containerAdd hbox vbox
+    containerAdd window hbox
     return ()
 
 createFrame :: Maybe String -> IO Frame
