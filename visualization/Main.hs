@@ -99,8 +99,8 @@ createDrawing window x = do
     ass    <- createFrame $ Just "Assembly"
     ram    <- createFrame $ Just "Ram and Registers"
     vbox   <- vBoxNew True 10
-    stdin  <- createTextAreaFrame $ Just "Stdin"
-    stdout <- createTextAreaFrame $ Just "Stdout"
+    stdin  <- createTextAreaFrame (Just "Stdin") False
+    stdout <- createTextAreaFrame (Just "Stdout") False
     containerAdd hbox c
     containerAdd hbox ass
     containerAdd hbox ram
@@ -110,10 +110,11 @@ createDrawing window x = do
     containerAdd window hbox
     return ()
 
-createTextAreaFrame :: Maybe String -> IO Frame
-createTextAreaFrame s = do
+createTextAreaFrame :: Maybe String -> Bool -> IO Frame
+createTextAreaFrame s b = do
     frame <- createFrame s
     area  <- textViewNew
+    set area [textViewEditable := b]
     containerAdd frame area
     return frame
 
