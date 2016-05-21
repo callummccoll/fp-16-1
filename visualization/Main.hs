@@ -68,6 +68,7 @@ main = do
     counter <- newIORef 0
     -- The main window.
     window <- windowNew
+    windowSetDefaultSize window 300 300
     -- Draw the Window
     redraw window counter
     -- Stop the application when the window is closed.
