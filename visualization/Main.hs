@@ -86,3 +86,8 @@ incrementWithLimit :: (Integral a) => a -> a -> a
 incrementWithLimit limit x
     | x >= limit = limit
     | otherwise  = x + 1
+
+decrementWithLimit :: (Integral a) => a -> a -> a
+decrementWithLimit limit x
+    | x <= limit = limit
+    | otherwise  = x - 1
