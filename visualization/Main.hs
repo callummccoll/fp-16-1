@@ -92,15 +92,15 @@ redraw window num = do
     createDrawing window num
     widgetShowAll window
 
-createDrawing :: (Window -> IORef Int -> IO ())
+createDrawing :: Window -> IORef Int -> IO ()
 createDrawing window x = do
     hbox   <- hBoxNew True 10
     c      <- createFrame $ Just "C"
     ass    <- createFrame $ Just "Assembly"
     ram    <- createFrame $ Just "Ram and Registers"
     vbox   <- vBoxNew True 10
-    stdin  <- createFrame $ Just "Stdin"
-    stdout <- createFrame $ Just "Stdout"
+    stdin  <- createTextAreaFrame $ Just "Stdin"
+    stdout <- createTextAreaFrame $ Just "Stdout"
     containerAdd hbox c
     containerAdd hbox ass
     containerAdd hbox ram
@@ -109,6 +109,13 @@ createDrawing window x = do
     containerAdd hbox vbox
     containerAdd window hbox
     return ()
+
+createTextAreaFrame :: Maybe String -> IO Frame
+createTextAreaFrame s = do
+    frame <- createFrame s
+    area  <- textViewNew
+    containerAdd frame area
+    return frame
 
 createFrame :: Maybe String -> IO Frame
 createFrame s = case s of
