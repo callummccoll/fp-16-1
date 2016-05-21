@@ -73,7 +73,7 @@ main = do
     containerAdd window button
     -- Increment the counter when the button is pressed.
     button `on` buttonActivated $ do
-        modifyIORef' counter (incrementWithLimit 10)
+        modifyIORef' counter (changeWithLimits 0 10 (+1))
         (readIORef counter) >>= (\num -> buttonSetLabel button ("test " ++ (show num)))
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
@@ -82,12 +82,9 @@ main = do
     widgetShowAll window
     mainGUI
 
-incrementWithLimit :: (Integral a) => a -> a -> a
-incrementWithLimit limit x
-    | x >= limit = limit
-    | otherwise  = x + 1
-
-decrementWithLimit :: (Integral a) => a -> a -> a
-decrementWithLimit limit x
-    | x <= limit = limit
-    | otherwise  = x - 1
+changeWithLimits :: (Integral a) => a -> a -> (a -> a) -> a -> a
+changeWithLimits min max f x
+    | x' >= max = max
+    | x' <= min = min
+    | otherwise = x'
+        where x' = f x
