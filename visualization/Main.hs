@@ -68,13 +68,8 @@ main = do
     counter <- newIORef 0
     -- The main window.
     window <- windowNew
-    -- The button.
-    button <- buttonNewWithLabel "test 0"
-    containerAdd window button
-    -- Increment the counter when the button is pressed.
-    button `on` buttonActivated $ do
-        modifyIORef' counter (changeWithLimits 0 10 (+1))
-        (readIORef counter) >>= (\num -> buttonSetLabel button ("test " ++ (show num)))
+    -- Draw the Window
+    redraw window counter
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
         liftIO $ mainQuit
@@ -88,3 +83,24 @@ changeWithLimits min max f x
     | x' <= min = min
     | otherwise = x'
         where x' = f x
+
+redraw :: Window -> IORef Int -> IO ()
+redraw window num = do
+    containerForeach window (\w -> containerRemove window w)
+    createDrawing window num
+    widgetShowAll window
+
+createDrawing :: (Window -> IORef Int -> IO ())
+createDrawing = \window x -> do
+    button <- createButton window x
+    containerAdd window button
+    return ()
+
+createButton :: (Window -> IORef Int -> IO Button)
+createButton = \window counter -> do
+    button <- (readIORef counter) >>= (\num -> buttonNewWithLabel ("test " ++ (show num)))
+    -- Increment the counter when the button is pressed.
+    button `on` buttonActivated $ do
+        modifyIORef' counter (changeWithLimits 0 10 (+1))
+        redraw window counter 
+    return button
