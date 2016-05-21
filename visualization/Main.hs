@@ -95,10 +95,10 @@ redraw window num = do
 createDrawing :: (Window -> IORef Int -> IO ())
 createDrawing = \window x -> do
     box <- hBoxNew True 10
-    button1 <- createButton window x
-    button2 <- createButton window x
-    button3 <- createButton window x
-    button4 <- createButton window x
+    button1 <- createButton window x (changeWithLimits 0 10 (+1))
+    button2 <- createButton window x (changeWithLimits 0 10 (flip (-) 1))
+    button3 <- createButton window x (changeWithLimits 0 10 (+1))
+    button4 <- createButton window x (changeWithLimits 0 10 (flip (-) 1))
     containerAdd box button1
     containerAdd box button2
     containerAdd box button3
@@ -106,11 +106,11 @@ createDrawing = \window x -> do
     containerAdd window box
     return ()
 
-createButton :: (Window -> IORef Int -> IO Button)
-createButton = \window counter -> do
+createButton :: (Window -> IORef Int -> (Int -> Int) -> IO Button)
+createButton window counter f = do
     button <- (readIORef counter) >>= (\num -> buttonNewWithLabel ("test " ++ (show num)))
     -- Increment the counter when the button is pressed.
     button `on` buttonActivated $ do
-        modifyIORef' counter (changeWithLimits 0 10 (+1))
+        modifyIORef' counter f
         redraw window counter
     return button
