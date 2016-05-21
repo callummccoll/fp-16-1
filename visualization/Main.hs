@@ -93,20 +93,31 @@ redraw window num = do
     widgetShowAll window
 
 createDrawing :: (Window -> IORef Int -> IO ())
-createDrawing = \window x -> do
+createDrawing window x = do
     box <- hBoxNew True 10
-    button1 <- createButton window x (changeWithLimits 0 10 (+1))
-    button2 <- createButton window x (changeWithLimits 0 10 (flip (-) 1))
-    button3 <- createButton window x (changeWithLimits 0 10 (+1))
-    button4 <- createButton window x (changeWithLimits 0 10 (flip (-) 1))
-    containerAdd box button1
-    containerAdd box button2
-    containerAdd box button3
-    containerAdd box button4
+    frame1 <- createFrame $ Just "C"
+    frame2 <- createFrame $ Just "Assembly"
+    frame3 <- createFrame $ Just "Ram and Registers"
+    frame4 <- createFrame $ Nothing 
+    containerAdd box frame1
+    containerAdd box frame2
+    containerAdd box frame3
+    containerAdd box frame4
     containerAdd window box
     return ()
 
-createButton :: (Window -> IORef Int -> (Int -> Int) -> IO Button)
+createFrame :: Maybe String -> IO Frame
+createFrame s = case s of
+    Nothing -> do 
+        frame <- frameNew
+        return frame
+    Just s' -> do
+        frame <- frameNew
+        frameSetLabel frame s'
+        frameSetLabelAlign frame 0.5 0.5
+        return frame
+
+createButton :: Window -> IORef Int -> (Int -> Int) -> IO Button
 createButton window counter f = do
     button <- (readIORef counter) >>= (\num -> buttonNewWithLabel ("test " ++ (show num)))
     -- Increment the counter when the button is pressed.
