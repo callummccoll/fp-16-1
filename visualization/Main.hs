@@ -59,7 +59,10 @@ import Graphics.UI.Gtk
 import Control.Applicative
 import Control.Monad.Trans
 import Data.IORef
-import Data.Sequence
+
+type Point2d = (Double, Double)
+type Time = Double
+type Behavior a = Time -> a
 
 main :: IO ()
 main = do
@@ -68,14 +71,12 @@ main = do
     counter <- newIORef 0
     -- The main window.
     window <- windowNew
-    windowSetDefaultSize window 300 300
+    windowSetDefaultSize window 900 600
     -- Draw the Window
     redraw window counter
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
         liftIO $ mainQuit
-    -- Display the window
-    widgetShowAll window
     mainGUI
 
 changeWithLimits :: (Integral a) => a -> a -> (a -> a) -> a -> a
@@ -93,8 +94,16 @@ redraw window num = do
 
 createDrawing :: (Window -> IORef Int -> IO ())
 createDrawing = \window x -> do
-    button <- createButton window x
-    containerAdd window button
+    box <- hBoxNew True 10
+    button1 <- createButton window x
+    button2 <- createButton window x
+    button3 <- createButton window x
+    button4 <- createButton window x
+    containerAdd box button1
+    containerAdd box button2
+    containerAdd box button3
+    containerAdd box button4
+    containerAdd window box
     return ()
 
 createButton :: (Window -> IORef Int -> IO Button)
@@ -103,5 +112,5 @@ createButton = \window counter -> do
     -- Increment the counter when the button is pressed.
     button `on` buttonActivated $ do
         modifyIORef' counter (changeWithLimits 0 10 (+1))
-        redraw window counter 
+        redraw window counter
     return button
