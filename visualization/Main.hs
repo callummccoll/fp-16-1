@@ -99,10 +99,12 @@ createDrawing window x = do
     ass    <- createFrame $ Just "Assembly"
     ram    <- createFrame $ Just "Ram and Registers"
     vbox   <- vBoxNew True 10
-    stdin  <- createTextAreaFrame (Just "Stdin") False
-    stdout <- createTextAreaFrame (Just "Stdout") False
+    stdin  <- createTextAreaFrame (Just "Stdin") Nothing False
+    stdout <- createTextAreaFrame (Just "Stdout") Nothing False
+    table  <- (createRAM [(Just "l1", "c1"), (Just "l2", "c2")])
     containerAdd hbox c
     containerAdd hbox ass
+    containerAdd ram table
     containerAdd hbox ram
     containerAdd vbox stdin
     containerAdd vbox stdout
@@ -110,13 +112,52 @@ createDrawing window x = do
     containerAdd window hbox
     return ()
 
-createTextAreaFrame :: Maybe String -> Bool -> IO Frame
-createTextAreaFrame s b = do
-    frame <- createFrame s
-    area  <- textViewNew
-    set area [textViewEditable := b]
+createRAM :: [(Maybe String, String)] -> IO Table 
+createRAM cs = do
+    table <- (tableNew (length cs) 1 True)
+    attachCellsToTable table (createRAMCell <$> cs) 0
+
+attachCellsToTable :: Table -> [IO HBox] -> Int -> IO Table
+attachCellsToTable table cells row = case cells of
+    []     -> return table
+    c : cs -> do
+        hBox <- c
+        tableAttachDefaults table hBox 0 1 row (row + 1)
+        attachCellsToTable table cs (row + 1)
+
+createRAMCell :: (Maybe String, String) -> IO HBox
+createRAMCell (label, content) = do
+    hbox <- hBoxNew True 10
+    cell <- createTextAreaFrame Nothing (Just content) False
+    label <- createTextAreaFrame Nothing label False
+    containerAdd hbox label
+    containerAdd hbox cell
+    return hbox
+
+
+
+createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
+createTextAreaFrame title content editable = do
+    frame <- createFrame title
+    area <- createTextArea content editable
     containerAdd frame area
     return frame
+
+createTextArea :: Maybe String -> Bool -> IO TextView
+createTextArea content editable = case content of
+    Nothing -> createEmptyTextArea editable
+    Just s  -> do
+        buffer <- textBufferNew Nothing
+        textBufferSetText buffer s
+        area <- textViewNewWithBuffer buffer
+        set area [textViewEditable := editable]
+        return area
+
+createEmptyTextArea :: Bool -> IO TextView
+createEmptyTextArea editable = do
+    area <- textViewNew
+    set area [textViewEditable := editable]
+    return area
 
 createFrame :: Maybe String -> IO Frame
 createFrame s = case s of
