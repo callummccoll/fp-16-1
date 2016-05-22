@@ -122,6 +122,7 @@ addRegisters vbox registers = case registers of
     r : rs -> do
         register <- r
         containerAdd vbox register
+        set vbox [boxChildPacking register := PackRepel]
         addRegisters vbox rs
 
 
