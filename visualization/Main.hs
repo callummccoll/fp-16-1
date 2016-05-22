@@ -43,14 +43,12 @@ createDrawing window x = do
     hbox   <- hBoxNew True 10
     c      <- createFrame $ Just "C"
     ass    <- createFrame $ Just "Assembly"
-    ram    <- createFrame $ Just "Ram and Registers"
+    ram    <- createRAM [(Just "l1", "c1"), (Just "l2", "c2")] [("PC", "2"), ("SP", "5")]
     vbox   <- vBoxNew True 10
     stdin  <- createTextAreaFrame (Just "Stdin") Nothing False
     stdout <- createTextAreaFrame (Just "Stdout") Nothing False
-    table  <- (createRAM [(Just "l1", "c1"), (Just "l2", "c2")])
     containerAdd hbox c
     containerAdd hbox ass
-    containerAdd ram table
     containerAdd hbox ram
     containerAdd vbox stdin
     containerAdd vbox stdout
@@ -58,10 +56,22 @@ createDrawing window x = do
     containerAdd window hbox
     return ()
 
-createRAM :: [(Maybe String, String)] -> IO Table 
-createRAM cs = do
+createRAM :: [(Maybe String, String)] -> [(String, String)] -> IO Frame
+createRAM cs registers = do
+    frame <- createFrame $ Just "Ram and Registers"
+    hbox  <- hBoxNew False 10
+    registers <- createRegisters registers
+    table <- createRamTable cs
+    containerAdd hbox table
+    containerAdd hbox registers
+    containerAdd frame hbox 
+    return frame
+
+createRamTable :: [(Maybe String, String)] -> IO Table
+createRamTable cs = do
     table <- (tableNew (length cs) 1 True)
     attachCellsToTable table (createRAMCell <$> cs) 0
+
 
 attachCellsToTable :: Table -> [IO HBox] -> Int -> IO Table
 attachCellsToTable table cells row = case cells of
@@ -73,12 +83,47 @@ attachCellsToTable table cells row = case cells of
 
 createRAMCell :: (Maybe String, String) -> IO HBox
 createRAMCell (label, content) = do
-    hbox <- hBoxNew True 10
-    cell <- createTextAreaFrame Nothing (Just content) False
-    label <- createTextAreaFrame Nothing label False
+    hbox <- hBoxNew False 10
+    frame <- createFrame Nothing
+    set frame [ widgetHeightRequest := 5 ]
+    eventBox <- eventBoxNew
+    widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
+    cell <- labelNew (Just content)
+    label <- labelNew label
     containerAdd hbox label
-    containerAdd hbox cell
+    containerAdd eventBox cell
+    containerAdd frame eventBox
+    containerAdd hbox frame
     return hbox
+
+createRegisters :: [(String, String)] -> IO VBox
+createRegisters registers = do
+    vbox  <- vBoxNew True 10
+    addRegisters vbox (createRegister <$> registers)
+
+
+createRegister :: (String, String) -> IO HBox
+createRegister (register, content) = do
+    hbox     <- hBoxNew False 10
+    label    <- labelNew (Just register)
+    frame    <- createFrame Nothing
+    eventBox <- eventBoxNew
+    widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
+    value    <- labelNew (Just content)
+    containerAdd eventBox value
+    containerAdd frame eventBox
+    containerAdd hbox label
+    containerAdd hbox frame
+    return hbox
+
+addRegisters :: VBox -> [IO HBox] -> IO VBox
+addRegisters vbox registers = case registers of
+    []     -> return vbox
+    r : rs -> do
+        register <- r
+        containerAdd vbox register
+        addRegisters vbox rs
+
 
 createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
 createTextAreaFrame title content editable = do
