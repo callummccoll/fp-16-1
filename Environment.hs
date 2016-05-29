@@ -97,29 +97,22 @@ freezeEnv e = do
 makeEnvFromAss :: String -> IO Environment
 makeEnvFromAss source = do
 	prog <- parseAss source
-   
+
 	st <- buildST prog
 	st' <-resolveST prog st
 	st'' <-verifyST prog st'
-	
-	let inst = stripInstructions prog
+
 	let stdIn = [5]
 
 	let env = initEnvF {eSP = memSize, eSymTable = st'', eStdIn = stdIn}
 	env' <- eThawEnv env
 
-	addInstToEnv inst 0 env'
-   
-	return env'
-   
-addInstToEnv :: [Instruction] -> Int -> Environment -> IO Environment
-addInstToEnv xs index env = case xs of
-	[] -> return env
-	(x:xs') -> let
-			Left ram = (eRAM env)
-		in do
-			writeArray ram index (Cell "" (Inst x))
-			addInstToEnv xs' (index+1) env
+	env'' <- loadMemory prog 0 env'
+
+	t <- freezeEnv env''
+	print t
+
+	return env''
 	
 parseAss :: String -> IO Program
 parseAss source = do
@@ -134,16 +127,47 @@ parseAss source = do
             OK (program, _) -> do
 				return program	
    
-stripInstructions :: Program -> [Instruction]
-stripInstructions (Program decl) = case decl of
-	[] -> []
-	(x:xs) -> case x of 
-		DcLH p l -> stripInstructions (Program xs)
-		DcLB p l -> stripInstructions (Program xs)
-		DcAlloc p a -> stripInstructions (Program xs)
-		DcInst p i -> [i] ++ stripInstructions (Program xs)
-		DcVal p v -> stripInstructions (Program xs)
-		
+loadMemory :: Program -> Int -> Environment -> IO Environment
+loadMemory (Program ds) index env = case ds of
+	[] -> return env
+	(x:xs) -> let
+			Left ram = (eRAM env)
+		in case x of
+			DcLH p l -> do
+				writeArray ram index (Cell (idName (lhId l)) Undefined)
+				loadMemory (Program xs) (index) env
+			DcLB p l -> 
+				loadMemory (Program xs) (index) env
+			DcAlloc p a -> case (aVal a) of
+				Just v -> case (vVal v) of
+					Right ui -> do
+						env' <- loadAlloc (uiVal ui) env
+						loadMemory (Program xs) (index+(uiVal ui)) env
+					Left iden -> error $ "Symbol Table Not Resolved"
+				Nothing -> do
+					env' <- loadAlloc 1 env
+					loadMemory (Program xs) (index+1) env'
+			DcInst p i -> do
+				cell <- readArray ram index
+				writeArray ram index (cell {cVal = (Inst i)})
+				loadMemory (Program xs) (index+1) env
+			DcVal p v -> case (vVal v) of
+				Right ui -> do
+					cell <- readArray ram index
+					writeArray ram index (cell {cVal = (Int (uiVal ui))})
+					loadMemory (Program xs) (index+1) env
+				Left iden -> error $ "Symbol Table Not Resolved"
+
+loadAlloc :: Int -> Environment -> IO Environment
+loadAlloc index env = let 
+		Left ram = (eRAM env)
+	in case index of
+		0 -> return env
+		i -> do
+			cell <- readArray ram index
+			writeArray ram index (cell {cVal = Undefined})
+			loadAlloc (index-1) env
+				
 convertInstToString :: Instruction -> String
 convertInstToString inst = case inst of
 	MOVE _ s d -> "MOVE " ++ convertSrcToString s ++ " " ++ convertDestToString d
