@@ -9,11 +9,12 @@ BIN=main
 ifeq ($(OS),Windows_NT)
 SRCDIR=.
 HSRC=Emulation.hs  Environment.hs  Helpers.hs  Main.hs  Ram.hs
+BUILDDIR=${SRCDIR}\build
 else
 SRCDIR!=pwd
 HSRC!=ls *.hs
-endif
 BUILDDIR=${SRCDIR}/build
+endif
 HCFLAGS=-fno-warn-tabs -i../machine/parser
 
 all:	clean run
