@@ -6,9 +6,14 @@
 HC=ghc
 
 BIN=main 
-SRCDIR=./
-BUILDDIR=${SRCDIR}/build
+ifeq ($(OS),Windows_NT)
+SRCDIR=.
 HSRC=Emulation.hs  Environment.hs  Helpers.hs  Main.hs  Ram.hs
+else
+SRCDIR!=pwd
+HSRC!=ls *.hs
+endif
+BUILDDIR=${SRCDIR}/build
 HCFLAGS=-fno-warn-tabs -i../machine/parser
 
 all:	clean run
@@ -21,7 +26,11 @@ run:	build
 	${BUILDDIR}/${BIN}
 
 clean:
+ifeq ($(OS),Windows_NT)
+	del ${BUILDDIR}	
+else
 	rm -rf ${BUILDDIR}
+endif
 
 # vim:ft=make
 #
