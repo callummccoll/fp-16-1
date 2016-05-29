@@ -8,7 +8,7 @@ HC=ghc
 BIN=main 
 SRCDIR!=pwd
 BUILDDIR=${SRCDIR}/build
-HSRC!=ls *.hs
+HSRC=Emulation.hs  Environment.hs  Helpers.hs  Main.hs  Ram.hs
 HCFLAGS=-fno-warn-tabs -i../machine/parser
 
 all:	clean run
