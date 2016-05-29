@@ -1,7 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Environment (Cell(..), getIntFromCell, getInstructionFromCell, getStringFromCell, 
-					Environment, eA, eSP, ePC, eRAM, eStaticSize, eStdIn, eStdOut, eSymTable, initEnvF, eThawEnv, freezeEnv, makeEnvFromAss) where
+module Environment (CVal(..), Cell(..), getStringFromCVal, 
+					Environment, eA, eSP, ePC, eRAM, eStaticSize, eStdIn, eStdOut, eSymTable, initEnvF, eThawEnv, freezeEnv, makeEnvFromAss,
+					convertInstToString) where
 
 import Data.Array
 import Data.Array.IO
@@ -16,26 +17,34 @@ import ABR.Parser.Lexers
 memSize :: Int
 memSize = 20
 
-data Cell = 
+data CVal = 
 	  Undefined
 	| Int Int
 	| Inst Instruction
-	deriving Show
+	
+instance Show CVal where
+	showsPrec _ c = case c of
+		Undefined -> showString "Undefined"
+		Int i -> showString "Int " . shows i
+		Inst i -> showString "Inst " . showString (convertInstToString i)
+	
+data Cell = Cell {
+	cLabel :: String,
+	cVal :: CVal
+}
 
-getIntFromCell :: Cell -> Int
-getIntFromCell (Int a) = a
+instance Show Cell where
+	showsPrec _ c = shows (cLabel c) . showString " " . shows (cVal c)
 
-getInstructionFromCell :: Cell -> Instruction
-getInstructionFromCell (Inst x) = x
-
-getStringFromCell :: Cell -> String
-getStringFromCell cell = case cell of
+getStringFromCVal :: CVal -> String
+getStringFromCVal cell = case cell of
 	Int c -> show c
 	Inst c -> convertInstToString c
-	_ -> ""
+	_ -> "Undefined"
+
 
 data Environment = Environment {
-		eA :: Cell,
+		eA :: CVal,
 		eSP :: Int,
 		ePC :: Int,
 		eRAM :: Either (IOArray Int Cell) (Array Int Cell),
@@ -57,7 +66,7 @@ instance Show Environment where
 		showString "\n   StdIn = " . shows (eStdIn e) .
 		showString "\n   StdOut = " . shows (eStdOut e) .
 		showString "\n   SstaticSize = " . shows (eStaticSize e) .
-		showString "\n   RAM = " . (showString (concat (intersperse "\n         " (map getStringFromCell (elems r))))) .
+		showString "\n   RAM = " . (showString (concat (intersperse "\n         " (map show (elems r))))) .
 		showString "\n   Symbols = " . shows (eSymTable e) .
 		showString "\n]\n" 
 	
@@ -66,7 +75,7 @@ initEnvF = Environment {
 		eA = Undefined,
 		eSP = memSize,
 		ePC = 0,
-		eRAM = Right $ listArray (0, memSize - 1) (repeat Undefined),
+		eRAM = Right $ listArray (0, memSize - 1) (repeat (Cell "" Undefined)),
 		eStaticSize = 0,
 		eStdIn = [],
 		eStdOut = [],
@@ -109,7 +118,7 @@ addInstToEnv xs index env = case xs of
 	(x:xs') -> let
 			Left ram = (eRAM env)
 		in do
-			writeArray ram index (Inst x)
+			writeArray ram index (Cell "" (Inst x))
 			addInstToEnv xs' (index+1) env
 	
 parseAss :: String -> IO Program

@@ -7,7 +7,6 @@
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Emulation where
 --module Main (main) where
 
 import Data.Array
@@ -18,14 +17,14 @@ import System.IO
 
 import Assembly
 
+main :: IO ()
+main = do
+	mainLoop
+	return ()
+
 mainLoop :: IO ()
 mainLoop = do
-    return ()
-    {-src <- getContents
-	--putStr ("Steps (0 to Exit): ")
-	--hFlush stdout
-	--input <- getLine
-	
+	src <- getContents	
 	let n = 15--(read input)
 	case n of
 		0 -> return ()
@@ -36,7 +35,7 @@ mainLoop = do
 			env'' <- freezeEnv env'
 			putStr ("\n-------------------\n" ++ show env'' ++ "\n")
 			mainLoop
-			return ()-}
+			return ()
 	
 getExeStep :: Environment -> Int -> IO Environment
 getExeStep env steps = case steps of
@@ -49,10 +48,13 @@ doExecutionStep :: Environment -> IO Environment
 doExecutionStep env = do
 	let Left ram = (eRAM env)
 	cell <- readArray ram (ePC env)
-	let inst = getInstructionFromCell cell
-	putStr (getStringFromCell cell ++ "\n")
-	--putStr (show inst ++ "\n")
-	readInstruction inst env
+	case (cVal cell) of
+		Int i -> error $ "Memory Error: " ++ show i
+		Inst i -> do
+			putStr (getStringFromCVal (cVal cell) ++ "\n")
+			--putStr (show inst ++ "\n")
+			readInstruction i env
+		_ -> error $ "Memory Error: Undefined"
 		
 readInstruction :: Instruction -> Environment -> IO Environment
 readInstruction inst env = case inst of
@@ -84,9 +86,13 @@ actionCall name env = case (vVal name) of
 	Left iden -> do
 		let n = (idName iden)
 		case n of
-			"print" -> do
-				let env' = functionPrint (getIntFromCell (eA env)) env
-				incrementPC env'
+			"print" -> let 
+					v = eA env
+				in case v of 
+					Int i -> do
+						let env' = functionPrint i env
+						incrementPC env'
+					i -> error $ "Accumulator Error: " ++ getStringFromCVal i
 			"read" -> do
 				let env' = functionRead env
 				incrementPC env'
@@ -416,7 +422,8 @@ setIDestValue :: Int -> Int -> Environment -> IO Environment
 setIDestValue addr value env = let
 		Left ram = (eRAM env)
 	in do
-		writeArray ram addr (Int value)
+		cell <- (readArray ram addr)
+		writeArray ram addr (cell {cVal = (Int value)})
 		return env
 	
 getSourceValue :: Source -> Environment -> IO (Environment, Int)
@@ -425,7 +432,11 @@ getSourceValue src env = case (sVal src) of
 		DRegister _ r -> case (rVal r) of 
 			"PC" -> return (env, (ePC env))
 			"SP" -> return (env, (eSP env))
-			"A" -> return (env, (getIntFromCell (eA env)))
+			"A" -> let 
+					v = eA env
+				in case v of 
+					Int i -> return (env, i)
+					i -> error $ "Accumulator Error: " ++ getStringFromCVal i
 		DValue _ v -> case (vVal v) of
 			Left iden -> do
 				x <- getIDestValue (getAddress (idName iden) env) env
@@ -543,7 +554,9 @@ getIDestValue addr env = let
 		Left ram = (eRAM env)
 	in do
 		cell <- (readArray ram addr)
-		return (getIntFromCell cell)
+		case (cVal cell) of
+			Int i -> return i
+			i -> error $ "Cell Error: " ++ getStringFromCVal i
 		
 getAddress :: String -> Environment -> Int
 getAddress lbl env = let
