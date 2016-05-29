@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Emulation
+import Environment
 import Helpers
 import Ram
 
@@ -17,6 +18,7 @@ type Behavior a = Time -> a
 main :: IO ()
 main = do
     mainLoop
+    env <- environmentFromFile "test.ass"
     initGUI
     -- A counter which is incremented when the button is pressed.
     counter <- newIORef 0
@@ -30,6 +32,10 @@ main = do
         liftIO $ mainQuit
     -- Start the application.
     mainGUI
+
+environmentFromFile :: String -> IO Environment
+environmentFromFile filename = do
+    ((readFile filename) >>= makeEnvFromAss)
 
 redraw :: Window -> IORef Int -> IO ()
 redraw window num = do
