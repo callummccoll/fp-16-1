@@ -54,7 +54,7 @@
 
 module Helpers where
 
-import Graphics.UI.Gtk
+import "gtk3" Graphics.UI.Gtk
 import Data.IORef
 
 changeWithPredicate :: (Integral a) => (a -> Bool) -> (a -> a) -> a -> a

@@ -56,7 +56,7 @@ module Ram (createRam) where
 
 import Helpers
 
-import Graphics.UI.Gtk
+import "gtk3" Graphics.UI.Gtk
 import Data.IORef
 
 createRam :: [(Maybe String, String)] -> [(String, String)] -> IO Frame

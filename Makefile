@@ -15,13 +15,13 @@ SRCDIR!=pwd
 HSRC!=ls *.hs
 BUILDDIR=${SRCDIR}/build
 endif
-HCFLAGS=-fno-warn-tabs -i../machine/parser
+HCFLAGS=-fno-warn-tabs -i../machine/parser -XPackageImports
 
 all:	clean run
 
 build:
 	mkdir ${BUILDDIR}
-	${HC} --make ${HSRC} ${HCFLAGS} -hidir ${BUILDDIR} -odir ${BUILDDIR} -outputdir ${BUILDDIR} -tmpdir ${BUILDDIR} -o ${BUILDDIR}/${BIN}
+	${HC} --make ${HSRC} ${HCFLAGS} -hidir ${BUILDDIR} -odir ${BUILDDIR} -outputdir ${BUILDDIR} -tmpdir ${BUILDDIR} -o ${BUILDDIR}/${BIN} 
 
 run:	build
 	${BUILDDIR}/${BIN}

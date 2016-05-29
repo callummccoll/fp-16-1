@@ -5,7 +5,7 @@ import Environment
 import Helpers
 import Ram
 
-import Graphics.UI.Gtk
+import "gtk3" Graphics.UI.Gtk
 
 import Control.Applicative
 import Control.Monad.Trans
