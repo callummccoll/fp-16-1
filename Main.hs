@@ -1,5 +1,6 @@
 module Main (main) where
 
+import Emulation
 import Helpers
 import Ram
 
@@ -15,6 +16,7 @@ type Behavior a = Time -> a
 
 main :: IO ()
 main = do
+    mainLoop
     initGUI
     -- A counter which is incremented when the button is pressed.
     counter <- newIORef 0
