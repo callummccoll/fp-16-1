@@ -54,12 +54,14 @@
 
 module Ram (createRam) where
 
+import Environment
 import Helpers
 
 import "gtk3" Graphics.UI.Gtk
+import Data.Array
 import Data.IORef
 
-createRam :: [(Maybe String, String)] -> [(String, String)] -> IO Frame
+createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
     frame <- createFrame $ Just "Ram and Registers"
     hbox  <- hBoxNew False 10
@@ -72,19 +74,19 @@ createRam cs registers = do
     containerAdd frame hbox 
     return frame
 
-createRamTable :: [(Maybe String, String)] -> IO Table
+createRamTable :: Array Int (Maybe String, String) -> IO Table
 createRamTable cs = do
     table <- (tableNew (length cs) 1 True)
     attachCellsToTable table (createRAMCell <$> cs) 0
 
 
-attachCellsToTable :: Table -> [IO HBox] -> Int -> IO Table
-attachCellsToTable table cells row = case cells of
-    []     -> return table
-    c : cs -> do
-        hBox <- c
+attachCellsToTable :: Table -> Array Int (IO HBox) -> Int -> IO Table
+attachCellsToTable table cells row
+    | row >= (length cells) = return table
+    | otherwise                   = do
+        hBox <- cells ! row
         tableAttachDefaults table hBox 0 1 row (row + 1)
-        attachCellsToTable table cs (row + 1)
+        attachCellsToTable table cells (row + 1)
 
 createRAMCell :: (Maybe String, String) -> IO HBox
 createRAMCell (label, content) = do
