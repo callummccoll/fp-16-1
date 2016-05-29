@@ -1,4 +1,9 @@
------fno-warn-tabs
+----
+-- Compiling:
+-- ghc Emulation.hs -fno-warn-tabs -i../../machine/parser
+
+-- Windows
+-- Emulation.exe < test.ass
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -7,14 +12,32 @@
 import Data.Array
 import Data.Array.IO
 import Environment
+import System.IO
+
+import Assembly
 
 main :: IO ()
 main = do
-	env <- loadExmapleEnv
-	env' <- getExeStep env 15
-	env'' <- freezeEnv env'
-	putStr (show env'')
+	mainLoop
 	return ()
+
+mainLoop :: IO ()
+mainLoop = do
+	src <- getContents
+	--putStr ("Steps (0 to Exit): ")
+	--hFlush stdout
+	--input <- getLine
+	
+	let n = 15--(read input)
+	case n of
+		0 -> return ()
+		_ -> do
+			putStr "\n"
+			env <- makeEnvFromAss src
+			env' <- getExeStep env n
+			env'' <- freezeEnv env'
+			putStr ("\n-------------------\n" ++ show env'' ++ "\n")
+			mainLoop
 	
 getExeStep :: Environment -> Int -> IO Environment
 getExeStep env steps = case steps of
@@ -24,68 +47,76 @@ getExeStep env steps = case steps of
 		getExeStep env' (steps-1)				
 
 doExecutionStep :: Environment -> IO Environment
-doExecutionStep env = do 
+doExecutionStep env = do
 	let Left ram = (eRAM env)
 	cell <- readArray ram (ePC env)
-	let inst = words (getCellInst cell)
-	putStr (show inst ++ "\n")
+	let inst = getInstructionFromCell cell
+	putStr (getInstructionStringFromCell cell ++ "\n")
+	--putStr (show inst ++ "\n")
 	readInstruction inst env
 		
-readInstruction :: [String] -> Environment -> IO Environment
-readInstruction inst env = case inst of 
-	[] -> return env ----this means the step is greater than the program allows.
-	(x:xs) -> case x of
-		"HALT" -> return (actionHalt env)
-		"CALL" -> (actionCall (head xs) env)
-		"RETURN" -> actionReturn env
-		"MOVE" -> actionMove (head xs) (last xs) env
-		"ADD" -> actionAdd (head xs) (last xs) env
-		"SUB" -> actionSub (head xs) (last xs) env
-		"MULT" -> actionMult (head xs) (last xs) env
-		"DIV" -> actionDiv (head xs) (last xs) env
-		"MOD" -> actionMod (head xs) (last xs) env
-		"JUMP" -> actionJump (head xs) env
-		"BEQ" -> return env
-		"BNE" -> return env
-		"BLT" -> return env
-		"BGT" -> return env
-		"BLE" -> return env
-		"BGE" -> return env
-		_ -> return env --invalid instruction?
-	
+readInstruction :: Instruction -> Environment -> IO Environment
+readInstruction inst env = case inst of
+		MOVE _ s d -> actionMove s d env
+		ADD _ s d -> actionAdd s d env
+		SUB _ s d -> actionSub s d env
+		MULT _ s d -> actionMult s d env
+		DIV _ s d -> actionDiv s d env
+		MOD _ s d -> actionMod s d env
+		JUMP _ v -> actionJump v env
+		CALL _ v -> actionCall v env
+		BEQ _ v -> actionBEQ v env
+		BNE _ v -> actionBNE v env
+		BLT _ v -> actionBLT v env
+		BGT _ v -> actionBGT v env
+		BLE _ v -> actionBLE v env
+		BGE _ v -> actionBGE v env
+		RET _ -> actionReturn env
+		HALT _ -> return (actionHalt env)
+		
+
 -- HALT: Halting simply returns the same machine. No action is taken.
 actionHalt :: Environment -> Environment
 actionHalt machine = machine
 
 -- CALL: set PC to addr given, then place return address into SP pointer, reduce SP.
-actionCall :: String -> Environment -> IO Environment
-actionCall name env = case name of
-	"print" -> let
-			env' = functionPrint (getIntFromCell (eA env)) env
-		in
-			incrementPC env'
-	"read" -> let
-			env' = functionRead env
-		in
-			incrementPC env'
-	_ -> do
-		env' <- addToStack (ePC env) env
-		let addr' = (sAddr (getSymFromLabel name (eSymTable env')))
-		setDestValue "PC" addr' env'
+actionCall :: Value -> Environment -> IO Environment
+actionCall name env = case (vVal name) of
+	Left iden -> do
+		let n = (idName iden)
+		case n of
+			"print" -> do
+				let env' = functionPrint (getIntFromCell (eA env)) env
+				incrementPC env'
+			"read" -> do
+				let env' = functionRead env
+				incrementPC env'
+			_ -> do
+				env' <- addToStack (ePC env) env
+				let addr = (sAddr (getSymFromLabel n (eSymTable env')))
+				let d = DRegister (vPos name) (Register (vPos name) "PC")
+				setDestValue d addr env'
+	Right ui -> do
+		let x = read (uiVal ui)
+		let d = DRegister (vPos name) (Register (vPos name) "PC")
+		setDestValue d x env
 
 -- RETURN: take the addr from where SP is pointing and put that into the PC
 actionReturn :: Environment -> IO Environment
 actionReturn env = do
-		tS <- (getSourceValue "(SP)" env)
+		let s = Source (0,0) (Left (DIndirect (0,0) (Location (0,0) (Left (Register (0,0) "SP")))))
+		tS <- getSourceValue s env
 		let env' = fst tS
 		let v = snd tS
-		env'' <- setDestValue "PC" v env
-		env''' <- setDestValue "SP" ((eSP env'')+1) env''
+		let d = DRegister (0,0) (Register (0,0) "PC")
+		env'' <- setDestValue d v env'
+		let d' = DRegister (0,0) (Register (0,0) "SP")
+		env''' <- setDestValue d' ((eSP env'')+1) env''
 		env'''' <- incrementPC env'''
 		return env''''
 
 -- MOVE: Moving a value from src to dest. 
-actionMove :: String -> String -> Environment -> IO Environment
+actionMove :: Source -> Dest -> Environment -> IO Environment
 actionMove src dest env = do
 		tS <- getSourceValue src env
 		let env' = fst tS
@@ -94,127 +125,172 @@ actionMove src dest env = do
 		incrementPC env''
 
 -- Add: Adds dest to src and stores in dest
-actionAdd :: String -> String -> Environment -> IO Environment
+actionAdd :: Source -> Dest -> Environment -> IO Environment
 actionAdd src dest env = do
 	tS <- getSourceValue src env
 	let env' = fst tS
 	let vS = snd tS
-	tD <- getSourceValue dest env'
+	let s = Source (dPos dest) (Left dest)
+	tD <- getSourceValue s env'
 	let	env'' = fst tD
-	let	vD = snd tD
+	let	vD = snd tD	
 	env''' <- setDestValue dest (vD + vS) env''
 	incrementPC env'''
-	
+
 -- SUB: Subtracts src from dest and stores in dest
-actionSub :: String -> String -> Environment -> IO Environment
+actionSub :: Source -> Dest -> Environment -> IO Environment
 actionSub src dest env = do
 	tS <- getSourceValue src env
 	let env' = fst tS
 	let vS = snd tS
-	tD <- getSourceValue dest env'
+	let s = Source (dPos dest) (Left dest)
+	tD <- getSourceValue s env'
 	let	env'' = fst tD
 	let	vD = snd tD	
 	env''' <- setDestValue dest (vD - vS) env''
 	incrementPC env'''
 		
 -- MULT: Multiplies dest with src and stores in dest
-actionMult :: String -> String -> Environment -> IO Environment
+actionMult :: Source -> Dest -> Environment -> IO Environment
 actionMult src dest env = do
 	tS <- getSourceValue src env
 	let env' = fst tS
 	let vS = snd tS
-	tD <- getSourceValue dest env'
+	let s = Source (dPos dest) (Left dest)
+	tD <- getSourceValue s env'
 	let	env'' = fst tD
 	let	vD = snd tD
 	env''' <- setDestValue dest (vD * vS) env''
 	incrementPC env'''
 		
 -- DIV: Intger Divides dest with src and stores in dest
-actionDiv :: String -> String -> Environment -> IO Environment
+actionDiv :: Source -> Dest -> Environment -> IO Environment
 actionDiv src dest env = do
 	tS <- getSourceValue src env
 	let env' = fst tS
 	let vS = snd tS
-	tD <- getSourceValue dest env'
+	let s = Source (dPos dest) (Left dest)
+	tD <- getSourceValue s env'
 	let	env'' = fst tD
 	let	vD = snd tD
 	env''' <- setDestValue dest (div vD vS) env''
 	incrementPC env'''
 		
 -- MOD: Does dest mod src and stores in dest
-actionMod :: String -> String -> Environment -> IO Environment
+actionMod :: Source -> Dest -> Environment -> IO Environment
 actionMod src dest env = do
 	tS <- getSourceValue src env
 	let env' = fst tS
 	let vS = snd tS
-	tD <- getSourceValue dest env'
+	let s = Source (dPos dest) (Left dest)
+	tD <- getSourceValue s env'
 	let	env'' = fst tD
 	let	vD = snd tD
 	env''' <- setDestValue dest (mod vD vS) env''
 	incrementPC env'''
 
 -- JUMP: Sets PC to address it is given.
-actionJump :: String -> Environment -> IO Environment
-actionJump addr env = setDestValue "PC" (getAddress addr env) env
+actionJump :: Value -> Environment -> IO Environment
+actionJump addr env = do
+	let dPC = DRegister (vPos addr) (Register (vPos addr) "PC")
+	let s = Source (vPos addr) (Left (DValue (vPos addr) addr))
+	x <- getSourceValue s env
+	setDestValue dPC (snd x) (fst x)
 
 -- BEQ: If Accumulator == 0, PC is set to addr given
-actionBEQ :: String -> Environment -> IO Environment
+actionBEQ :: Value -> Environment -> IO Environment
 actionBEQ addr env = do
-	tS <- getSourceValue "A" env
+	let s = Source (0,0) (Left (DRegister (0,0) (Register (0,0) "A")))
+	tS <- getSourceValue s env
 	let env' = fst tS
 	let aV = snd tS
 	if aV == 0
-	then setDestValue "PC" (getAddress addr env') env'
+	then case (vVal addr) of
+		Left iden -> do 
+			let s = Source (0,0) (Left (DValue (0,0) addr))
+			x <- getSourceValue s env
+			return (fst x) {ePC = (snd x)}
+		Right ui -> return env {ePC = read (uiVal ui)}
 	else incrementPC env'
-		
+	
 -- BNE: If Accumulator != 0, PC is set to addr given
-actionBNE :: String -> Environment -> IO Environment
+actionBNE :: Value -> Environment -> IO Environment
 actionBNE addr env = do
-	tS <- getSourceValue "A" env
+	let s = Source (0,0) (Left (DRegister (0,0) (Register (0,0) "A")))
+	tS <- getSourceValue s env
 	let env' = fst tS
 	let aV = snd tS
 	if aV /= 0
-	then setDestValue "PC" (getAddress addr env') env'
+	then case (vVal addr) of
+		Left iden -> do 
+			let s = Source (0,0) (Left (DValue (0,0) addr))
+			x <- getSourceValue s env
+			return (fst x) {ePC = (snd x)}
+		Right ui -> return env {ePC = read (uiVal ui)}
 	else incrementPC env'
 		
 -- BLT: If Accumulator < 0, PC is set to addr given
-actionBLT :: String -> Environment -> IO Environment
+actionBLT :: Value -> Environment -> IO Environment
 actionBLT addr env = do
-	tS <- getSourceValue "A" env
-	let env' = fst tS
-	let aV = snd tS
-	if aV < 0
-	then setDestValue "PC" (getAddress addr env') env'
-	else incrementPC env'
-
--- BGT: If Accumulator > 0, PC is set to addr given
-actionBGT :: String -> Environment -> IO Environment
-actionBGT addr env = do
-	tS <- getSourceValue "A" env
-	let env' = fst tS
-	let aV = snd tS
-	if aV > 0
-	then setDestValue "PC" (getAddress addr env') env'
-	else incrementPC env'
-
--- BLE: If Accumulator <= 0, PC is set to addr given
-actionBLE :: String -> Environment -> IO Environment
-actionBLE addr env = do
-	tS <- getSourceValue "A" env
+	let s = Source (0,0) (Left (DRegister (0,0) (Register (0,0) "A")))
+	tS <- getSourceValue s env
 	let env' = fst tS
 	let aV = snd tS
 	if aV <= 0
-	then setDestValue "PC" (getAddress addr env') env'
+	then case (vVal addr) of
+		Left iden -> do 
+			let s = Source (0,0) (Left (DValue (0,0) addr))
+			x <- getSourceValue s env
+			return (fst x) {ePC = (snd x)}
+		Right ui -> return env {ePC = read (uiVal ui)}
 	else incrementPC env'
 
--- BGE: If Accumulator >= 0, PC is set to addr given
-actionBGE :: String -> Environment -> IO Environment
-actionBGE addr env = do
-	tS <- getSourceValue "A" env
+-- BGT: If Accumulator > 0, PC is set to addr given
+actionBGT :: Value -> Environment -> IO Environment
+actionBGT addr env = do
+	let s = Source (0,0) (Left (DRegister (0,0) (Register (0,0) "A")))
+	tS <- getSourceValue s env
 	let env' = fst tS
 	let aV = snd tS
 	if aV >= 0
-	then setDestValue "PC" (getAddress addr env') env'
+	then case (vVal addr) of
+		Left iden -> do 
+			let s = Source (0,0) (Left (DValue (0,0) addr))
+			x <- getSourceValue s env
+			return (fst x) {ePC = (snd x)}
+		Right ui -> return env {ePC = read (uiVal ui)}
+	else incrementPC env'
+
+-- BLE: If Accumulator <= 0, PC is set to addr given
+actionBLE :: Value -> Environment -> IO Environment
+actionBLE addr env = do
+	let s = Source (0,0) (Left (DRegister (0,0) (Register (0,0) "A")))
+	tS <- getSourceValue s env
+	let env' = fst tS
+	let aV = snd tS
+	if aV <= 0
+	then case (vVal addr) of
+		Left iden -> do 
+			let s = Source (0,0) (Left (DValue (0,0) addr))
+			x <- getSourceValue s env
+			return (fst x) {ePC = (snd x)}
+		Right ui -> return env {ePC = read (uiVal ui)}
+	else incrementPC env'
+
+-- BGE: If Accumulator >= 0, PC is set to addr given
+actionBGE :: Value -> Environment -> IO Environment
+actionBGE addr env = do
+	let s = Source (0,0) (Left (DRegister (0,0) (Register (0,0) "A")))
+	tS <- getSourceValue s env
+	let env' = fst tS
+	let aV = snd tS
+	if aV >= 0
+	then case (vVal addr) of
+		Left iden -> do 
+			let s = Source (0,0) (Left (DValue (0,0) addr))
+			x <- getSourceValue s env
+			return (fst x) {ePC = (snd x)}
+		Right ui -> return env {ePC = read (uiVal ui)}
 	else incrementPC env'
 
 -- Print: Takes the given Int and puts it into the StdOut
@@ -226,151 +302,244 @@ functionRead :: Environment -> Environment
 functionRead env = let
 		stdIn = (eStdIn env)
 	in case stdIn of
-		[] -> env {eA = getCellFromUndefined}
-		(x:xs) -> env {eA = (getCellFromInt x)}
+		[] -> env {eA = initCellWithUndefined}
+		(x:xs) -> env {eA = (initCellWithInt x)}
+		
+
 		
 -----------------------------------------------------------
-setDestValue :: String -> Int -> Environment -> IO Environment
+setDestValue :: Dest -> Int -> Environment -> IO Environment
 setDestValue dest srcValue env = case dest of
-	('#':xs) -> setIDestValue (convertStringToInt xs 0) srcValue env
-	"(PC)" -> setIDestValue (ePC env) srcValue env
-	"(SP)" -> setIDestValue (eSP env) srcValue env
-	"(A)"  -> setIDestValue (getIntFromCell(eA env)) srcValue env
-	"+(PC)" -> do
-		env' <- setDestValue "PC" ((ePC env)+1) env
-		setIDestValue (ePC env') srcValue env'
-	"+(SP)" -> do
-		env' <- setDestValue "SP" ((eSP env)+1) env
-		setIDestValue (eSP env') srcValue env'
-	"+(A)"  -> do
-		env' <- setDestValue "A" ((getIntFromCell (eA env))+1) env
-		setIDestValue (getIntFromCell(eA env')) srcValue env'
-	"-(PC)" -> do
-		env' <- setDestValue "PC" ((ePC env)-1) env
-		setIDestValue (ePC env') srcValue env'
-	"-(SP)" -> do
-		env' <- setDestValue "SP" ((eSP env)-1) env
-		setIDestValue (eSP env') srcValue env'
-	"-(A)"  -> do
-		env' <- setDestValue "A" ((getIntFromCell (eA env))-1) env
-		setIDestValue (getIntFromCell(eA env')) srcValue env'
-	"(PC)+" -> do
-		env' <- setIDestValue (ePC env) srcValue env
-		setDestValue "PC" ((ePC env)+1) env'
-	"(SP)+" -> do
-		env' <- setIDestValue (eSP env) srcValue env
-		setDestValue "SP" ((eSP env)+1) env'
-	"(A)+"  -> do
-		env' <- setIDestValue (getIntFromCell(eA env)) srcValue env
-		setDestValue "A" ((getIntFromCell (eA env))+1) env'
-	"(PC)-" -> do
-		env' <- setIDestValue (ePC env) srcValue env
-		setDestValue "PC" ((ePC env)-1) env'
-	"(SP)-" -> do
-		env' <- setIDestValue (eSP env) srcValue env
-		setDestValue "SP" ((eSP env)-1) env'
-	"(A)-"  -> do
-		env' <- setIDestValue (getIntFromCell(eA env)) srcValue env
-		setDestValue "A" ((getIntFromCell (eA env))-1) env'
-	"PC" -> return env {ePC = srcValue}
-	"SP" -> return env {eSP = srcValue}
-	"A" -> return env {eA = (getCellFromInt srcValue)}
-	xs -> case xs of		--at this point we have a nnn indreicton or symbol
-		('(':'P':'C':')':xs') -> setIDestValue ((ePC env)+(convertStringToInt xs' 0)) srcValue env
-		('(':'S':'P':')':xs') -> setIDestValue ((eSP env)+(convertStringToInt xs' 0)) srcValue env
-		('(':'A':')':xs') -> setIDestValue ((getIntFromCell(eA env))+(convertStringToInt xs' 0)) srcValue env
-		xs' -> setIDestValue (sAddr(getSymFromLabel xs' (eSymTable env))) srcValue env
+	DRegister _ r -> case (rVal r) of 
+		"PC" -> return env {ePC = srcValue}
+		"SP" -> return env {eSP = srcValue}
+		"A" -> return env {eA = (initCellWithInt srcValue)}
+	DValue _ v -> case (vVal v) of 
+		Left iden -> setIDestValue (sAddr(getSymFromLabel (idName iden) (eSymTable env))) srcValue env
+		Right ui -> setIDestValue (read(uiVal ui)) srcValue env
+	DIndex p l v -> do
+		let s = Source p (Right v) -- first find what v is 
+		x <- getSourceValue s env
+		case (lLoc l) of 
+			Left reg -> let
+					d' = (DRegister p reg)
+					s' = Source p (Left d')
+				in do
+					x' <- getSourceValue s' env
+					let dv = DValue p (Value p (Right (Uint p (show ((snd x') + (snd x))))))
+					setDestValue dv srcValue env
+			Right v -> let
+					d' = (DValue p v)
+					s' = Source p (Left d')
+				in do
+					x' <- getSourceValue s' env
+					let dv = DValue p (Value p (Right (Uint p (show ((snd x') + (snd x))))))
+					setDestValue dv srcValue env
+	DPostInc p l -> case (lLoc l) of 
+		Left reg -> let
+				id = DIndirect p (Location p (Left reg))
+				d = (DRegister p reg)
+				s = Source p (Left d)
+			in do
+				env' <- setDestValue id srcValue env
+				x <- getSourceValue s env'
+				setDestValue d ((snd x)+1) (fst x)
+		Right v -> let				
+				id = DIndirect p (Location p (Right v))
+				d = (DValue p v)
+				s = Source p (Left d)
+			in do
+				env' <- setDestValue id srcValue env
+				x <- getSourceValue s env'
+				setDestValue d ((snd x)+1) (fst x)
+	DPostDec p l -> case (lLoc l) of 
+		Left reg -> let
+				id = DIndirect p (Location p (Left reg))
+				d = (DRegister p reg)
+				s = Source p (Left d)
+			in do
+				env' <- setDestValue id srcValue env
+				x <- getSourceValue s env'
+				setDestValue d ((snd x)-1) (fst x)
+		Right v -> let				
+				id = DIndirect p (Location p (Right v))
+				d = (DValue p v)
+				s = Source p (Left d)
+			in do
+				env' <- setDestValue id srcValue env
+				x <- getSourceValue s env'
+				setDestValue d ((snd x)-1) (fst x)
+	DPreInc p l -> case (lLoc l) of 
+		Left reg -> do
+			let d = (DRegister p reg)
+			let s = Source p (Left d)
+			x <- getSourceValue s env
+			env' <- setDestValue d ((snd x)+1) (fst x)
+			let id = DIndirect p (Location p (Left reg))
+			setDestValue id srcValue env'
+		Right v -> do
+			let d = (DValue p v)
+			let s = Source p (Left d)
+			x <- getSourceValue s env
+			env' <- setDestValue d ((snd x)+1) (fst x)
+			let id = DIndirect p (Location p (Right v))
+			setDestValue id srcValue env'
+	DPreDec p l -> case (lLoc l) of 
+		Left reg -> do
+			let d = (DRegister p reg)
+			let s = Source p (Left d)
+			x <- getSourceValue s env
+			env' <- setDestValue d ((snd x)-1) (fst x)
+			let id = DIndirect p (Location p (Left reg))
+			setDestValue id srcValue env'
+		Right v -> do
+			let d = (DValue p v)
+			let s = Source p (Left d)
+			x <- getSourceValue s env
+			env' <- setDestValue d ((snd x)-1) (fst x)
+			let id = DIndirect p (Location p (Right v))
+			setDestValue id srcValue env'
+	DIndirect p l -> case (lLoc l) of 
+		Left reg -> let
+				d = (DRegister p reg)
+				s = Source p (Left d)
+			in do
+				x <- getSourceValue s env
+				let dv = DValue p (Value p (Right (Uint p (show (snd x)))))
+				setDestValue dv srcValue (fst x)
+		Right v -> let
+				d = (DValue p v)
+				s = Source p (Left d)
+			in do
+				x <- getSourceValue s env
+				let dv = DValue p (Value p (Right (Uint p (show (snd x)))))
+				setDestValue dv srcValue (fst x)
 	
 setIDestValue :: Int -> Int -> Environment -> IO Environment
 setIDestValue addr value env = let
 		Left ram = (eRAM env)
 	in do
-		writeArray ram addr (getCellFromInt value)
+		writeArray ram addr (initCellWithInt value)
 		return env
 	
-getSourceValue :: String -> Environment -> IO (Environment, Int)
-getSourceValue src env = case src of
-	('#':xs) -> return (env, (convertStringToInt xs 0))
-	"(PC)" -> do
-		v <- getIDestValue (ePC env) env
-		return (env, v)
-	"(SP)" -> do
-		v <- getIDestValue (eSP env) env
-		return (env, v)
-	"(A)"  -> do
-		v <- getIDestValue (getIntFromCell (eA env)) env
-		return (env, v)
-	"+(PC)" -> do
-		env' <- setDestValue "PC" ((ePC env)+1) env
-		v <- getIDestValue (ePC env') env'
-		return (env', 0)
-	"+(SP)" -> do
-		env' <- setDestValue "SP" ((eSP env)+1) env
-		v <- getIDestValue (eSP env') env'
-		return (env', 0)
-	"+(A)"  -> do
-		env' <- setDestValue "A" ((getIntFromCell (eA env))+1) env
-		v <- getIDestValue (getIntFromCell (eA env')) env'
-		return (env', 0)
-	"-(PC)" -> do
-		v <- getIDestValue (ePC env) env
-		env' <- setDestValue "PC" ((ePC env)-1) env
-		return (env', 0)
-	"-(SP)" -> do
-		v <- getIDestValue (eSP env) env
-		env' <- setDestValue "SP" ((eSP env)-1) env
-		return (env', 0)
-	"-(A)"  -> do
-		env' <- setDestValue "A" ((getIntFromCell (eA env))-1) env
-		v <- getIDestValue (getIntFromCell (eA env')) env'		
-		return (env', 0)	
-	"(PC)+" -> do
-		env' <- setDestValue "PC" ((ePC env)+1) env
-		v <- getIDestValue (ePC env') env'
-		return (env', 0)
-	"(SP)+" -> do
-		env' <- setDestValue "SP" ((eSP env)+1) env
-		v <- getIDestValue (eSP env') env'
-		return (env', 0)
-	"(A)+"  -> do
-		v <- getIDestValue (getIntFromCell (eA env)) env
-		env' <- setDestValue "A" ((getIntFromCell (eA env))+1) env
-		return (env', 0)
-	"(PC)-" -> do
-		v <- getIDestValue (ePC env) env
-		env' <- setDestValue "PC" ((ePC env)-1) env
-		return (env', 0)
-	"(SP)-" -> do
-		v <- getIDestValue (eSP env) env
-		env' <- setDestValue "SP" ((eSP env)-1) env
-		return (env', 0)
-	"(A)-"  -> do
-		v <- getIDestValue (getIntFromCell (eA env)) env
-		env' <- setDestValue "A" ((getIntFromCell (eA env))-1) env
-		return (env', 0)
-	"PC" -> return (env, (ePC env))
-	"SP" -> return (env, (eSP env))
-	"A" -> return (env, (getIntFromCell (eA env)))
-	xs -> case xs of		--at this point we have a nnn indreicton or symbol
-		('(':'P':'C':')':xs') -> do
-			v <- getIDestValue ((ePC env)+(convertStringToInt xs' 0)) env
-			return (env, v)
-		('(':'S':'P':')':xs') -> do
-			v <- getIDestValue ((eSP env)+(convertStringToInt xs' 0)) env
-			return (env, v)
-		('(':'A':')':xs') -> do
-			v <- getIDestValue ((getIntFromCell (eA env))+(convertStringToInt xs' 0)) env
-			return (env, v)
-		('(':xs') -> let -- Label with indirection
-				lbl = reverse (tail (reverse (xs')))
-				v = getAddress lbl env
-			in do
-				addr <- getIDestValue v env
-				v' <- getIDestValue addr env
-				return (env, v')				
-		xs' -> do
-			v <- getIDestValue (sAddr(getSymFromLabel xs' (eSymTable env))) env
-			return (env, v)
+getSourceValue :: Source -> Environment -> IO (Environment, Int)
+getSourceValue src env = case (sVal src) of
+	Left dest -> case dest of 
+		DRegister _ r -> case (rVal r) of 
+			"PC" -> return (env, (ePC env))
+			"SP" -> return (env, (eSP env))
+			"A" -> return (env, (getIntFromCell (eA env)))
+		DValue _ v -> case (vVal v) of
+			Left iden -> do
+				x <- getIDestValue (sAddr(getSymFromLabel (idName iden) (eSymTable env))) env
+				return (env, x)
+			Right ui -> do
+				x <- getIDestValue (read(uiVal ui)) env
+				return (env, x)
+		DIndex p l v -> do
+			let s = Source (0,0) (Right v) -- first find what v is 
+			x <- getSourceValue s env
+			case (lLoc l) of 
+				Left reg -> do
+					let d' = (DRegister (0,0) reg)
+					let s' = Source (0,0) (Left d')
+					x' <- getSourceValue s' (fst x)
+					let s'' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show ((snd x)+(snd x'))))))))
+					getSourceValue s'' (fst x')
+				Right v -> do
+					let d' = (DValue (0,0) v)
+					let s' = Source (0,0) (Left d')
+					x' <- getSourceValue s' (fst x)
+					let s'' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show ((snd x)+(snd x'))))))))
+					getSourceValue s'' (fst x')
+		DPostInc p l -> case (lLoc l) of 
+			Left reg -> do
+				let id = DIndirect (0,0) (Location (0,0) (Left reg))
+				let s = Source (0,0) (Left id)
+				x <- getSourceValue s env
+				let d = DRegister (0,0) reg
+				let s' = Source (0,0) (Left d)
+				x' <- getSourceValue s' (fst x)
+				env' <- setDestValue d ((snd x')+1) (fst x')
+				return (env', snd x)
+			Right v -> do
+				let id = DIndirect (0,0) (Location (0,0) (Right v))
+				let s = Source (0,0) (Left id)
+				x <- getSourceValue s env
+				let d = DValue (0,0) v
+				let s' = Source (0,0) (Left d)
+				x' <- getSourceValue s' (fst x)
+				env' <- setDestValue d ((snd x')+1) (fst x')
+				return (env', snd x)
+		DPostDec p l -> case (lLoc l) of 
+			Left reg -> do
+				let id = DIndirect (0,0) (Location (0,0) (Left reg))
+				let s = Source (0,0) (Left id)
+				x <- getSourceValue s env
+				let d = DRegister (0,0) reg
+				let s' = Source (0,0) (Left d)
+				x' <- getSourceValue s' (fst x)
+				env' <- setDestValue d ((snd x')-1) (fst x')
+				return (env', snd x)
+			Right v -> do
+				let id = DIndirect (0,0) (Location (0,0) (Right v))
+				let s = Source (0,0) (Left id)
+				x <- getSourceValue s env
+				let d = DValue (0,0) v
+				let s' = Source (0,0) (Left d)
+				x' <- getSourceValue s' (fst x)
+				env' <- setDestValue d ((snd x')-1) (fst x')
+				return (env', snd x)
+		DPreInc (0,0) l -> case (lLoc l) of 
+			Left reg -> do
+				let d = (DRegister (0,0) reg)
+				let s = Source (0,0) (Left d)
+				x <- getSourceValue s env
+				env' <- setDestValue d ((snd x)+1) (fst x)
+				let id = DIndirect (0,0) (Location (0,0) (Left reg))
+				let s' = Source (0,0) (Left id)
+				getSourceValue s' env'
+			Right v -> do
+				let d = (DValue (0,0) v)
+				let s = Source (0,0) (Left d)
+				x <- getSourceValue s env
+				env' <- setDestValue d ((snd x)+1) (fst x)
+				let id = DIndirect (0,0) (Location (0,0) (Right v))
+				let s' = Source (0,0) (Left id)
+				getSourceValue s' env'
+		DPreDec p l -> case (lLoc l) of 
+			Left reg -> do
+				let d = (DRegister (0,0) reg)
+				let s = Source (0,0) (Left d)
+				x <- getSourceValue s env
+				env' <- setDestValue d ((snd x)-1) (fst x)
+				let id = DIndirect (0,0) (Location (0,0) (Left reg))
+				let s' = Source (0,0) (Left id)
+				getSourceValue s' env'
+			Right v -> do
+				let d = (DValue (0,0) v)
+				let s = Source (0,0) (Left d)
+				x <- getSourceValue s env
+				env' <- setDestValue d ((snd x)-1) (fst x)
+				let id = DIndirect (0,0) (Location (0,0) (Right v))
+				let s' = Source (0,0) (Left id)
+				getSourceValue s' env'
+		DIndirect p l -> case (lLoc l) of 
+			Left reg -> do
+				let d = (DRegister (0,0) reg)
+				let s = Source (0,0) (Left d)
+				x <- getSourceValue s env
+				let s' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show (snd x)))))))
+				getSourceValue s' (fst x)
+			Right v -> do
+				let d = (DValue (0,0) v)
+				let s = Source (0,0) (Left d)
+				x <- getSourceValue s env
+				let s' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show (snd x)))))))
+				getSourceValue s' (fst x)
+	Right value -> case (vVal value) of 
+		Left iden -> return (env, sAddr(getSymFromLabel (idName iden) (eSymTable env)))
+		Right ui -> return (env, read (uiVal ui))
 
 getIDestValue :: Int -> Environment -> IO Int
 getIDestValue addr env = let
@@ -384,39 +553,19 @@ getAddress x env = let
 		exists = symExists x (eSymTable env)
 	in if exists == True
 		then (sAddr (getSymFromLabel x (eSymTable env)))
-		else convertStringToInt x 0
+		else read x
 	
 -- A convenience function that puts an Int onto the stack and decrements the SP
 addToStack :: Int -> Environment -> IO Environment
 addToStack x env = do
-	env' <- setDestValue "SP" ((eSP env)-1) env
-	setDestValue "(SP)" x env'
+	env' <- return env {eSP = (eSP env)-1}
+	let d = DIndirect (0,0) (Location (0,0) (Left (Register (0,0) "SP")))
+	setDestValue d x env'
 	
 -- A convenience function that increments the PC.
 incrementPC :: Environment -> IO Environment
-incrementPC env = setDestValue "PC" ((ePC env)+1) env
-	
-convertStringToInt :: String -> Int -> Int
-convertStringToInt xs num = case xs of
-	"" -> num
-	(x:xs) -> case x of
-		'0' -> convertStringToInt xs (num * 10)
-		'1' -> convertStringToInt xs ((num * 10)+1)
-		'2' -> convertStringToInt xs ((num * 10)+2)
-		'3' -> convertStringToInt xs ((num * 10)+3)
-		'4' -> convertStringToInt xs ((num * 10)+4)
-		'5' -> convertStringToInt xs ((num * 10)+5)
-		'6' -> convertStringToInt xs ((num * 10)+6)
-		'7' -> convertStringToInt xs ((num * 10)+7)
-		'8' -> convertStringToInt xs ((num * 10)+8)
-		'9' -> convertStringToInt xs ((num * 10)+9)
-		_ -> convertStringToInt xs num
-
-
+incrementPC env = return env {ePC = (ePC env)+1}
 		
-
-
-
 	
 
 	

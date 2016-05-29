@@ -1,35 +1,50 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Environment (Cell, getCellInst, getIntFromCell, getCellFromInt, getCellFromUndefined,
+module Environment (Cell, initCellWithInt, initCellWithUndefined, initCellWithIntruction, getIntFromCell, getInstructionFromCell, getInstructionStringFromCell, 
 					Symbol, sLabel, sAddr, symExists, getSymFromLabel,
-					Environment, eA, eSP, ePC, eRAM, eStaticSize, eStdIn, eStdOut, eSymTable, initEnvF, thawEnv, freezeEnv, loadExmapleEnv) where
+					Environment, eA, eSP, ePC, eRAM, eStaticSize, eStdIn, eStdOut, eSymTable, initEnvF, eThawEnv, freezeEnv, makeEnvFromAss) where
 
 import Data.Array
 import Data.Array.IO
+import Data.List
+
+import Assembly
+import ABR.Parser
+import ABR.Parser.Lexers
 
 -- the number of cells, indexed from 0,
 memSize :: Int
 memSize = 20
 
-type Instruction = (String, Int, Int)
-
 data Cell = 
 	  Undefined
 	| Int Int
-	| Instruction String Int Int
+	| Inst Instruction
 	deriving Show
-	
-getCellInst :: Cell -> String
-getCellInst (Instruction a b c) = a
 
 getIntFromCell :: Cell -> Int
 getIntFromCell (Int a) = a
 
-getCellFromInt :: Int -> Cell
-getCellFromInt x = Int x
+getInstructionFromCell :: Cell -> Instruction
+getInstructionFromCell (Inst x) = x
 
-getCellFromUndefined :: Cell
-getCellFromUndefined = Undefined
+getInstructionStringFromCell :: Cell -> String
+getInstructionStringFromCell (Inst x) = convertInstToString x
+
+initCellWithInt :: Int -> Cell
+initCellWithInt x = Int x
+
+initCellWithUndefined :: Cell
+initCellWithUndefined = Undefined
+
+initCellWithIntruction :: Instruction -> Cell
+initCellWithIntruction x = Inst x
+
+showCell :: Cell -> String
+showCell Undefined = "Undefined"
+showCell (Int x) = show x
+showCell (Inst x) = convertInstToString x
+
 
 data Symbol = Symbol {
 	sLabel :: String,
@@ -73,8 +88,8 @@ instance Show Environment where
 		showString "\n   StdIn = " . shows (eStdIn e) .
 		showString "\n   StdOut = " . shows (eStdOut e) .
 		showString "\n   SstaticSize = " . shows (eStaticSize e) .
-		showString "\n   RAM = " . shows r .
-		showString "\n   Symbols = " . shows (eSymTable e) .
+		showString "\n   RAM = " . (showString (concat (intersperse "\n         " (map showCell (elems r))))) .
+		showString "\n   Symbols = " . (showString (concat (intersperse "\n             " (map show (eSymTable e))))) .
 		showString "\n]\n" 
 	
 initEnvF :: Environment
@@ -89,8 +104,8 @@ initEnvF = Environment {
 		eSymTable = []
    }
    
-thawEnv :: Environment -> IO Environment
-thawEnv e = do
+eThawEnv :: Environment -> IO Environment
+eThawEnv e = do
 	let Right r = eRAM e
 	r' <- thaw r
 	return $ e {eRAM = Left r'}
@@ -101,55 +116,97 @@ freezeEnv e = do
 	r' <- freeze r
 	return $ e {eRAM = Right r'}
 
-loadExmapleEnv :: IO Environment
-loadExmapleEnv = do
-	ram :: IOArray Int Cell <- newArray (0, memSize) Undefined
-	writeArray ram 0 (Instruction "MOVE #1 X"		0 0)
-	writeArray ram 1 (Instruction "MOVE #14 T"		0 0)
-	writeArray ram 2 (Instruction "CALL Main" 		1 0)
-	writeArray ram 3 (Instruction "HALT" 			2 3)
-	writeArray ram 4 (Instruction "SUB #2 SP" 		3 3)
-	writeArray ram 5 (Instruction "CALL read" 		4 5)
-	writeArray ram 6 (Instruction "MOVE A (SP)" 	5 5)
-	writeArray ram 7 (Instruction "MOVE (SP) A" 	6 5)
-	writeArray ram 8 (Instruction "ADD (T) A"			7 5)
-	writeArray ram 9 (Instruction "MOVE A (SP)1"	8 6)
-	writeArray ram 10 (Instruction "MOVE (SP)1 A"	9 6)
-	writeArray ram 11 (Instruction "CALL print" 	10 7)
-	writeArray ram 12 (Instruction "ADD #2 SP" 		11 7)
-	writeArray ram 13 (Instruction "RETURN" 		12 7)
+makeEnvFromAss :: String -> IO Environment
+makeEnvFromAss source = do
+   prog <- parseAss source
+   
+   let inst = stripInstructions (pDec prog)   
+   --temp
+   let symTab = [(Symbol "X" 14), (Symbol "T" 15), (Symbol "Main" 4)]
+   let stdIn = [5]
+   
+   let env = initEnvF {eSP = memSize, eSymTable = symTab, eStdIn = stdIn}
+   env' <- eThawEnv env
+   
+   addInstToEnv inst 0 env'
+   
+   return env'
+   
+addInstToEnv :: [Instruction] -> Int -> Environment -> IO Environment
+addInstToEnv xs index env = case xs of
+	[] -> return env
+	(x:xs') -> let
+			Left ram = (eRAM env)
+		in do
+			writeArray ram index (initCellWithIntruction x)
+			addInstToEnv xs' (index+1) env
 	
-	let symTab = [(Symbol "X" 14), (Symbol "T" 15), (Symbol "Main" 4)]
+parseAss :: String -> IO Program
+parseAss source = do
+   let cps = preLex source
+   let lexRes = (dropWhite $ nofail $ total assemblyL) cps
+   case lexRes of
+      Error _ _    -> error "LEXER FAILED"
+      OK (tlps, _) -> do
+         let parseRes = (nofail $ total programP) tlps
+         case parseRes of
+            Error _ _     -> error "PARSER FAILED"
+            OK (program, _) -> return program	
+   
+stripInstructions :: [Declaration] -> [Instruction]
+stripInstructions decl = case decl of
+	[] -> []
+	(x:xs) -> case x of 
+		DcLH p l -> stripInstructions xs
+		DcLB p l -> stripInstructions xs
+		DcAlloc p a -> stripInstructions xs
+		DcInst p i -> [i] ++ stripInstructions xs
+		DcVal p v -> stripInstructions xs
+		
+convertInstToString :: Instruction -> String
+convertInstToString inst = case inst of
+	MOVE _ s d -> "MOVE " ++ convertSrcToString s ++ " " ++ convertDestToString d
+	ADD _ s d -> "ADD " ++ convertSrcToString s ++ " " ++ convertDestToString d
+	SUB _ s d -> "SUB " ++ convertSrcToString s ++ " " ++ convertDestToString d
+	MULT _ s d -> "MULT " ++ convertSrcToString s ++ " " ++ convertDestToString d
+	DIV _ s d -> "DIV " ++ convertSrcToString s ++ " " ++ convertDestToString d
+	MOD _ s d -> "MOD " ++ convertSrcToString s ++ " " ++ convertDestToString d
+	JUMP _ v -> "JUMP " ++ convertValueToString v
+	CALL _ v -> "CALL " ++ convertValueToString v
+	BEQ _ v -> "BEQ " ++ convertValueToString v
+	BNE _ v -> "BNE " ++ convertValueToString v
+	BLT _ v -> "BLT " ++ convertValueToString v
+	BGT _ v -> "BGT " ++ convertValueToString v
+	BLE _ v -> "BLE " ++ convertValueToString v
+	BGE _ v -> "BGE " ++ convertValueToString v
+	RET _ -> "RETURN"
+	HALT _ -> "HALT"
 	
-	let stdIn = [5]
+convertDestToString :: Dest -> String
+convertDestToString dest = case dest of
+	DRegister _ r -> convertRegToString r
+	DValue _ v -> convertValueToString v
+	DIndex _ l v -> "(" ++ convertLocationToString l ++ ")" ++ convertValueToString v
+	DPostInc _ l -> "(" ++ convertLocationToString l ++ ")+"
+	DPostDec _ l -> "(" ++ convertLocationToString l ++ ")-"
+	DPreInc _ l -> "+(" ++ convertLocationToString l ++ ")"
+	DPreDec _ l -> "-(" ++ convertLocationToString l ++ ")"
+	DIndirect _ l -> "(" ++ convertLocationToString l ++ ")"
 	
-	let e = initEnvF {eSP = memSize+1, eRAM = Left ram, eSymTable = symTab, eStdIn = stdIn}
-	return e
+convertSrcToString :: Source -> String
+convertSrcToString src = case (sVal src) of
+	Left x -> convertDestToString x	--Dest
+	Right x -> "#" ++ convertValueToString x	--Value
 	
+convertLocationToString :: Location -> String
+convertLocationToString loc = case (lLoc loc) of
+	Left x -> convertRegToString x	--Reg
+	Right x -> convertValueToString x	--Value
 	
-	{-
-	writeArray ram 0 (Instruction "MOV #1 X" 	0 0)
-	writeArray ram 1 (Instruction "CALL main" 	1 0)
-	writeArray ram 2 (Instruction "HALT" 		2 3)
-	writeArray ram 3 (Instruction "SUB #2 SP" 	3 3)
-	writeArray ram 4 (Instruction "MOV #3 (SP)" 4 5)
-	writeArray ram 5 (Instruction "MOV (SP) A" 	5 5)
-	writeArray ram 6 (Instruction "ADD X A" 	6 5)
-	writeArray ram 7 (Instruction "MOV A 1(SP)" 7 6)
-	writeArray ram 8 (Instruction "MOV 1(SP) A" 8 6)
-	writeArray ram 9 (Instruction "CALL print" 	9 7)
-	writeArray ram 10 (Instruction "ADD #1 SP" 	10 7)
-	writeArray ram 11 (Instruction "ADD #2 SP" 	11 7)
-	writeArray ram 12 (Instruction "RETURN" 	12 7)
-	-}
+convertRegToString :: Register -> String
+convertRegToString reg = rVal reg
 	
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
+convertValueToString :: Value -> String
+convertValueToString value = case (vVal value) of
+	Left x -> (idName x)	--Indentifier
+	Right x -> (uiVal x)	--Uint

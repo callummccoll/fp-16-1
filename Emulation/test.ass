@@ -1,0 +1,15 @@
+	MOVE #1 X
+	MOVE #14 T
+	CALL Main
+	HALT
+Main:
+	SUB #2 SP
+	CALL read	// read from stdin
+	MOVE A (SP)
+	MOVE (SP) A
+	ADD (T) A
+	MOVE A (SP)1
+	MOVE (SP)1 A
+	CALL print	// write to stdout
+	ADD #2 SP
+	RETURN
