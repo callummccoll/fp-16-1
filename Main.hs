@@ -101,13 +101,13 @@ presentInstruction i s d = i ++ " " ++ (showSource s) ++ " " ++ (showDest d)
 showSource :: Source -> String
 showSource s = case (sVal s) of
     Left d  -> showDest d
-    Right v -> showValue v
+    Right v -> showSourceValue v
 
 showDest :: Dest -> String
 showDest d = case d of
     DRegister _ r -> showRegister r
     DValue _ v    -> showValue v
-    DIndex _ l v  -> (showLocation l) ++ (showValue v)
+    DIndex _ l v  -> "(" ++ (showLocation l) ++ ")" ++ (showValue v)
     DPostInc _ l  -> showLocation l
     DPostDec _ l  -> showLocation l
     DPreInc _ l   -> showLocation l
@@ -118,6 +118,11 @@ showLocation :: Location -> String
 showLocation l = case (lLoc l) of
     Left r  -> showRegister r
     Right v -> showValue v
+
+showSourceValue :: Value -> String
+showSourceValue v = case (vVal v) of
+    Left id  -> showIdentifier id
+    Right ui -> "#" ++ (showUInt ui)
 
 showValue :: Value -> String
 showValue v = case (vVal v) of
