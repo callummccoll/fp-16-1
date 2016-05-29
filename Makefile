@@ -27,7 +27,7 @@ run:	build
 
 clean:
 ifeq ($(OS),Windows_NT)
-	del ${BUILDDIR}	
+	rmdir ${BUILDDIR} /s /q
 else
 	rm -rf ${BUILDDIR}
 endif
