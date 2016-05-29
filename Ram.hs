@@ -85,20 +85,26 @@ attachCellsToTable table cells row
     | row >= (length cells) = return table
     | otherwise             = do
         (label, content) <- cells ! row
-        tableAttachDefaults table label 0 1 row (row + 1)
-        tableAttachDefaults table content 1 2 row (row + 1)
+        tableAttach table label 0 1 row (row + 1) [Fill] [Fill] 0 0
+        tableAttach table content 1 2 row (row + 1) [Fill] [Fill] 0 0
         attachCellsToTable table cells (row + 1)
 
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
 createRow (label, content) = do
     labelFrame <- createFrame Nothing
     contentFrame <- createFrame Nothing
+    labelAlignment <- alignmentNew 0 0 1 1
+    contentAlignment <- alignmentNew 0 0 1 1
+    alignmentSetPadding labelAlignment 5 5 5 5
+    alignmentSetPadding contentAlignment 5 5 5 5
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
     label' <- labelNew (label)
     cell <- labelNew (Just content)
-    containerAdd labelFrame label'
-    containerAdd eventBox cell
+    containerAdd labelAlignment label'
+    containerAdd labelFrame labelAlignment
+    containerAdd contentAlignment cell 
+    containerAdd eventBox contentAlignment
     containerAdd contentFrame eventBox
     return (labelFrame, contentFrame)
 
