@@ -74,6 +74,5 @@ createButton window counter env name f = do
     -- Increment the counter when the button is pressed.
     button `on` buttonActivated $ do
         modifyIORef' counter f
-        newEnv <- (readIORef counter) >>= (\num -> getExeStep env num)
-        redraw window counter env newEnv
+        (readIORef counter) >>= (getExeStep env) >>= (redraw window counter env)
     return button
