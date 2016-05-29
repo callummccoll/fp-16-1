@@ -13,3 +13,6 @@ Main:
 	CALL print	// write to stdout
 	ADD #2 SP
 	RETURN
+
+print: 0
+read: 0
