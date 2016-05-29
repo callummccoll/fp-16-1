@@ -78,8 +78,25 @@ extractCell c = case (cLabel c, cVal c) of
 
 showInstruction :: Instruction -> String
 showInstruction i = case i of
-    MOVE p s d -> "MOVE" ++ " " ++ (showSource s) ++ " " ++ (showDest d)
-    _      -> "Unf"
+    MOVE _ s d -> presentInstruction "MOVE" s d
+    ADD  _ s d -> presentInstruction "ADD" s d
+    SUB _ s d  -> presentInstruction "SUB" s d
+    MULT _ s d -> presentInstruction "MULT" s d
+    DIV _ s d  -> presentInstruction "DIV" s d 
+    MOD _ s d  -> presentInstruction "MOD" s d 
+    JUMP _ v   -> "JUMP" ++ " " ++ (showValue v)
+    BEQ _ v    -> "BEQ" ++ " " ++ (showValue v)
+    BNE _ v    -> "BNE" ++ " " ++ (showValue v)
+    BLT _ v    -> "BLT" ++ " " ++ (showValue v)
+    BGT _ v    -> "BGT" ++ " " ++ (showValue v)
+    BLE _ v    -> "BLE" ++ " " ++ (showValue v)
+    BGE _ v    -> "BGE" ++ " " ++ (showValue v)
+    CALL _ v   -> "CALL" ++ " " ++ (showValue v)
+    RET _      -> "RET"
+    HALT _     -> "HALT"
+ 
+presentInstruction :: String -> Source -> Dest -> String
+presentInstruction i s d = i ++ " " ++ (showSource s) ++ " " ++ (showDest d)
 
 showSource :: Source -> String
 showSource s = case (sVal s) of
