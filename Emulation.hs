@@ -7,6 +7,7 @@
 
 {-# LANGUAGE ScopedTypeVariables #-}
 
+module Emulation where
 --module Main (main) where
 
 import Data.Array
@@ -17,14 +18,10 @@ import System.IO
 
 import Assembly
 
-main :: IO ()
-main = do
-	mainLoop
-	return ()
-
 mainLoop :: IO ()
 mainLoop = do
-	src <- getContents	
+    return ()
+    {-src <- getContents	
 	let n = 15--(read input)
 	case n of
 		0 -> return ()
@@ -35,7 +32,7 @@ mainLoop = do
 			env'' <- freezeEnv env'
 			putStr ("\n-------------------\n" ++ show env'' ++ "\n")
 			mainLoop
-			return ()
+			return ()-}
 	
 getExeStep :: Environment -> Int -> IO Environment
 getExeStep env steps = case steps of
