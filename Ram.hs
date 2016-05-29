@@ -9,12 +9,11 @@ import Data.Array
 import Data.Array.MArray
 import Data.IORef
 
-getRamFromEnvironment :: IO Environment -> IO Frame
+getRamFromEnvironment :: Environment -> IO Frame
 getRamFromEnvironment env = do
-    env' <- env 
-    case (eRAM env') of
-        Left ram  -> (freeze ram) >>= (getRamFromArray env')
-        Right ram -> getRamFromArray env' ram
+    case (eRAM env) of
+        Left ram  -> (freeze ram) >>= (getRamFromArray env)
+        Right ram -> getRamFromArray env ram
 
 getRamFromArray :: Environment -> (Array Int Cell) -> IO Frame
 getRamFromArray env ram = (extractRegisters env) >>= (createRam (extractCell <$> ram))
