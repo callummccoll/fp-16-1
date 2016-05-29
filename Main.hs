@@ -42,36 +42,36 @@ redraw window num startEnv env = do
 
 createDrawing :: Window -> IORef Int -> IO Environment -> IO Environment -> IO ()
 createDrawing window x startEnv env = do
-    hbox       <- hBoxNew True 10
-    c          <- createFrame $ Just "C"
-    ass        <- createFrame $ Just "Assembly"
-    ram        <- getRamFromEnvironment env
-    io         <- createIO
-    vbox       <- vBoxNew True 10
-    nextButton <- createButton window x startEnv "next" (changeWithPredicate (<= 11) (+ 1))
-    prevButton <- createButton window x startEnv "previous" (changeWithPredicate (>= 0) (flip (-) 1))
-    containerAdd vbox nextButton
-    containerAdd vbox prevButton
-    containerAdd hbox vbox 
-    containerAdd hbox c
-    containerAdd hbox ass
-    containerAdd hbox ram
-    containerAdd hbox io
+    hbox <- hBoxNew True 10
+    (createButtons window x startEnv) >>= (containerAdd hbox) 
+    (createFrame $ Just "C") >>= (containerAdd hbox)
+    (createFrame $ Just "Assembly") >>= (containerAdd hbox)
+    (getRamFromEnvironment env) >>= (containerAdd hbox)
+    createIO >>= (containerAdd hbox)
     containerAdd window hbox
     widgetShowAll window
+
+createButtons :: Window -> IORef Int -> IO Environment -> IO VBox
+createButtons window x startEnv = do
+    vbox <- vBoxNew True 10
+    (createButton window x startEnv "next" (changeWithPredicate (<= 11) (+ 1))) >>= (containerAdd vbox)
+    (createButton window x startEnv "previous" (changeWithPredicate (>= 0) (flip (-) 1))) >>= (containerAdd vbox)
+    return vbox
+
 
 getRamFromEnvironment :: IO Environment -> IO Frame
 getRamFromEnvironment env = do
     env' <- env 
     case (eRAM env') of
-        Left ram  -> (freeze ram) >>= (getRamFromArray env)
-        Right ram -> getRamFromArray env ram
+        Left ram  -> (freeze ram) >>= (getRamFromArray env')
+        Right ram -> getRamFromArray env' ram
 
-getRamFromArray :: IO Environment -> (Array Int Cell) -> IO Frame
-getRamFromArray env ram = do
-    cells     <- return (extractCell <$> ram)
-    registers <- extractRegisters env
-    createRam cells registers
+getRamFromArray :: Environment -> (Array Int Cell) -> IO Frame
+getRamFromArray env ram = (extractRegisters env) >>= (createRam (extractCell <$> ram))
+
+extractRegisters :: Environment -> IO [(String, String)]
+extractRegisters env = do
+    return [("A", show (eA env)), ("SP", show (eSP env)), ("PC", show (ePC env)) ]
 
 extractCell :: Cell -> (Maybe String, String)
 extractCell c = case (cLabel c, cVal c) of
@@ -140,11 +140,6 @@ showUInt ui = show $ uiVal ui
 
 showRegister :: Register -> String
 showRegister r = (rVal r)
-
-extractRegisters :: IO Environment -> IO [(String, String)]
-extractRegisters env = do
-    env' <- env
-    return [("A", show (eA env')), ("SP", show (eSP env')), ("PC", show (ePC env')) ]
 
 createIO :: IO VBox
 createIO = do
