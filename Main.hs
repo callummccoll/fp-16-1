@@ -92,7 +92,7 @@ showInstruction i = case i of
     BLE _ v    -> "BLE" ++ " " ++ (showValue v)
     BGE _ v    -> "BGE" ++ " " ++ (showValue v)
     CALL _ v   -> "CALL" ++ " " ++ (showValue v)
-    RET _      -> "RET"
+    RET _      -> "RETURN"
     HALT _     -> "HALT"
  
 presentInstruction :: String -> Source -> Dest -> String
