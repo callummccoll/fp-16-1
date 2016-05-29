@@ -11,12 +11,8 @@ createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
     frame <- createFrame $ Just "Ram and Registers"
     hbox  <- hBoxNew False 10
-    registers <- createRegisters registers
-    table <- createRamTable cs
-    containerAdd hbox table
-    --set hbox [boxChildPacking table := PackRepel]
-    containerAdd hbox registers
-    --set hbox [boxChildPacking registers := PackRepel]
+    (createRamTable cs) >>= (containerAdd hbox)
+    (createRegisters registers) >>= (containerAdd hbox)
     containerAdd frame hbox 
     return frame
 
@@ -63,14 +59,12 @@ createRegisters registers = do
 createRegister :: (String, String) -> IO HBox
 createRegister (register, content) = do
     hbox     <- hBoxNew False 10
-    label    <- labelNew (Just register)
     frame    <- createFrame Nothing
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
-    value    <- labelNew (Just content)
-    containerAdd eventBox value
+    (labelNew (Just content)) >>= (containerAdd eventBox)
     containerAdd frame eventBox
-    containerAdd hbox label
+    (labelNew (Just register)) >>= (containerAdd hbox)
     containerAdd hbox frame
     return hbox
 
