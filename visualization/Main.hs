@@ -21,18 +21,18 @@ main = do
     -- The main window.
     window <- windowNew
     windowSetDefaultSize window 1200 800
-    -- Draw the Window
+    -- Draw the Window.
     redraw window counter
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
         liftIO $ mainQuit
+    -- Start the application.
     mainGUI
 
 redraw :: Window -> IORef Int -> IO ()
 redraw window num = do
     containerForeach window (\w -> containerRemove window w)
     createDrawing window num
-    widgetShowAll window
 
 createDrawing :: Window -> IORef Int -> IO ()
 createDrawing window x = do
@@ -40,17 +40,22 @@ createDrawing window x = do
     c      <- createFrame $ Just "C"
     ass    <- createFrame $ Just "Assembly"
     ram    <- createRam [(Just "l1", "c123"), (Just "l2", "c2")] [("PC", "2"), ("SP", "5")]
-    vbox   <- vBoxNew True 10
-    stdin  <- createTextAreaFrame (Just "Stdin") Nothing False
-    stdout <- createTextAreaFrame (Just "Stdout") Nothing False
+    io     <- createIO
     containerAdd hbox c
     containerAdd hbox ass
     containerAdd hbox ram
+    containerAdd hbox io
+    containerAdd window hbox
+    widgetShowAll window
+
+createIO :: IO VBox
+createIO = do
+    vbox   <- vBoxNew True 10
+    stdin  <- createTextAreaFrame (Just "Stdin") Nothing False
+    stdout <- createTextAreaFrame (Just "Stdout") Nothing False
     containerAdd vbox stdin
     containerAdd vbox stdout
-    containerAdd hbox vbox
-    containerAdd window hbox
-    return ()
+    return vbox
 
 createButton :: Window -> IORef Int -> (Int -> Int) -> IO Button
 createButton window counter f = do
