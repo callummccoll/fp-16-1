@@ -9,15 +9,13 @@ BIN=main
 SRCDIR!=pwd
 BUILDDIR=${SRCDIR}/build
 HSRC!=ls *.hs
-
-LDFLAGS=
-
+HCFLAGS=-fno-warn-tabs -i../machine/parser
 
 all:	clean run
 
 build:
 	mkdir ${BUILDDIR}
-	${HC} --make ${HSRC} -hidir ${BUILDDIR} -odir ${BUILDDIR} -outputdir ${BUILDDIR} -tmpdir ${BUILDDIR} -o ${BUILDDIR}/${BIN}
+	${HC} --make ${HSRC} ${HCFLAGS} -hidir ${BUILDDIR} -odir ${BUILDDIR} -outputdir ${BUILDDIR} -tmpdir ${BUILDDIR} -o ${BUILDDIR}/${BIN}
 
 run:	build
 	${BUILDDIR}/${BIN}
