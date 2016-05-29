@@ -1,5 +1,6 @@
 module Main (main) where
 
+import Assembly
 import Emulation
 import Environment
 import Helpers
@@ -72,8 +73,48 @@ getRamFromArray env ram = do
 extractCell :: Cell -> (Maybe String, String)
 extractCell c = case (cLabel c, cVal c) of
     (l, Int c')  -> (Just l, (show c'))
-    (l, Inst c') -> (Just l, (show c'))
+    (l, Inst c') -> (Just l, (showInstruction c'))
     _            -> (Nothing, "")
+
+showInstruction :: Instruction -> String
+showInstruction i = case i of
+    MOVE p s d -> "MOVE" ++ " " ++ (showSource s) ++ " " ++ (showDest d)
+    _      -> "Unf"
+
+showSource :: Source -> String
+showSource s = case (sVal s) of
+    Left d  -> showDest d
+    Right v -> showValue v
+
+showDest :: Dest -> String
+showDest d = case d of
+    DRegister _ r -> showRegister r
+    DValue _ v    -> showValue v
+    DIndex _ l v  -> (showLocation l) ++ (showValue v)
+    DPostInc _ l  -> showLocation l
+    DPostDec _ l  -> showLocation l
+    DPreInc _ l   -> showLocation l
+    DPreDec _ l   -> showLocation l
+    DIndirect _ l -> showLocation l
+
+showLocation :: Location -> String
+showLocation l = case (lLoc l) of
+    Left r  -> showRegister r
+    Right v -> showValue v
+
+showValue :: Value -> String
+showValue v = case (vVal v) of
+    Left id  -> showIdentifier id
+    Right ui -> showUInt ui
+
+showIdentifier :: Identifier -> String
+showIdentifier id = idName id
+
+showUInt :: Uint -> String
+showUInt ui = show $ uiVal ui
+
+showRegister :: Register -> String
+showRegister r = (rVal r)
 
 extractRegisters :: IO Environment -> IO [(String, String)]
 extractRegisters env = do
