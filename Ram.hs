@@ -1,11 +1,33 @@
-module Ram (createRam) where
+module Ram (getRamFromEnvironment) where
 
 import Environment
 import Helpers
+import Presentation
 
 import "gtk3" Graphics.UI.Gtk
 import Data.Array
+import Data.Array.MArray
 import Data.IORef
+
+getRamFromEnvironment :: IO Environment -> IO Frame
+getRamFromEnvironment env = do
+    env' <- env 
+    case (eRAM env') of
+        Left ram  -> (freeze ram) >>= (getRamFromArray env')
+        Right ram -> getRamFromArray env' ram
+
+getRamFromArray :: Environment -> (Array Int Cell) -> IO Frame
+getRamFromArray env ram = (extractRegisters env) >>= (createRam (extractCell <$> ram))
+
+extractRegisters :: Environment -> IO [(String, String)]
+extractRegisters env = do
+    return [("A", show (eA env)), ("SP", show (eSP env)), ("PC", show (ePC env)) ]
+
+extractCell :: Cell -> (Maybe String, String)
+extractCell c = case (cLabel c, cVal c) of
+    (l, Int c')  -> (Just l, (show c'))
+    (l, Inst c') -> (Just l, (showInstruction c'))
+    _            -> (Nothing, "")
 
 createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
