@@ -57,6 +57,12 @@ module Helpers where
 import Graphics.UI.Gtk
 import Data.IORef
 
+changeWithPredicate :: (Integral a) => (a -> Bool) -> (a -> a) -> a -> a
+changeWithPredicate p f x
+  | p x' = x'
+  | otherwise = x
+  where x' = f x
+
 createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
 createTextAreaFrame title content editable = do
     frame <- createFrame title

@@ -28,13 +28,6 @@ main = do
         liftIO $ mainQuit
     mainGUI
 
-changeWithLimits :: (Integral a) => a -> a -> (a -> a) -> a -> a
-changeWithLimits min max f x
-    | x' >= max = max
-    | x' <= min = min
-    | otherwise = x'
-        where x' = f x
-
 redraw :: Window -> IORef Int -> IO ()
 redraw window num = do
     containerForeach window (\w -> containerRemove window w)
