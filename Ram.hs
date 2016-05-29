@@ -76,32 +76,31 @@ createRam cs registers = do
 
 createRamTable :: Array Int (Maybe String, String) -> IO Table
 createRamTable cs = do
-    table <- (tableNew (length cs) 1 True)
-    attachCellsToTable table (createRAMCell <$> cs) 0
+    table <- (tableNew (length cs) 2 True)
+    attachCellsToTable table (createRow <$> cs) 0
 
 
-attachCellsToTable :: Table -> Array Int (IO HBox) -> Int -> IO Table
+attachCellsToTable :: Table -> Array Int (IO (Frame, Frame)) -> Int -> IO Table
 attachCellsToTable table cells row
     | row >= (length cells) = return table
-    | otherwise                   = do
-        hBox <- cells ! row
-        tableAttachDefaults table hBox 0 1 row (row + 1)
+    | otherwise             = do
+        (label, content) <- cells ! row
+        tableAttachDefaults table label 0 1 row (row + 1)
+        tableAttachDefaults table content 1 2 row (row + 1)
         attachCellsToTable table cells (row + 1)
 
-createRAMCell :: (Maybe String, String) -> IO HBox
-createRAMCell (label, content) = do
-    hbox <- hBoxNew False 10
-    frame <- createFrame Nothing
-    set frame [ widgetHeightRequest := 5 ]
+createRow :: (Maybe String, String) -> IO (Frame, Frame)
+createRow (label, content) = do
+    labelFrame <- createFrame Nothing
+    contentFrame <- createFrame Nothing
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
+    label' <- labelNew (label)
     cell <- labelNew (Just content)
-    label <- labelNew label
-    containerAdd hbox label
+    containerAdd labelFrame label'
     containerAdd eventBox cell
-    containerAdd frame eventBox
-    containerAdd hbox frame
-    return hbox
+    containerAdd contentFrame eventBox
+    return (labelFrame, contentFrame)
 
 createRegisters :: [(String, String)] -> IO VBox
 createRegisters registers = do
