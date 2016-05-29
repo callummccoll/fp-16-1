@@ -28,7 +28,8 @@ main = do
     window <- windowNew
     windowSetDefaultSize window 1200 800
     -- Draw the Window.
-    redraw window counter (environmentFromFile "test.ass")
+    env <- (environmentFromFile "test.ass")
+    redraw window counter (return env) (return env)
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
         liftIO $ mainQuit
@@ -38,18 +39,24 @@ main = do
 environmentFromFile :: String -> IO Environment
 environmentFromFile filename = (readFile filename) >>= makeEnvFromAss
 
-redraw :: Window -> IORef Int -> IO Environment -> IO ()
-redraw window num env = do
+redraw :: Window -> IORef Int -> IO Environment -> IO Environment -> IO ()
+redraw window num startEnv env = do
     containerForeach window (\w -> containerRemove window w)
-    createDrawing window num env
+    createDrawing window num startEnv env
 
-createDrawing :: Window -> IORef Int -> IO Environment -> IO ()
-createDrawing window x env = do
-    hbox   <- hBoxNew True 10
-    c      <- createFrame $ Just "C"
-    ass    <- createFrame $ Just "Assembly"
-    ram    <- getRamFromEnvironment env
-    io     <- createIO
+createDrawing :: Window -> IORef Int -> IO Environment -> IO Environment -> IO ()
+createDrawing window x startEnv env = do
+    hbox       <- hBoxNew True 10
+    c          <- createFrame $ Just "C"
+    ass        <- createFrame $ Just "Assembly"
+    ram        <- getRamFromEnvironment env
+    io         <- createIO
+    vbox       <- vBoxNew True 10
+    nextButton <- createButton window x startEnv (changeWithPredicate (<= 11) (+ 1))
+    prevButton <- createButton window x startEnv (changeWithPredicate (>= 0) (flip (-) 1))
+    containerAdd vbox nextButton
+    containerAdd vbox prevButton
+    containerAdd hbox vbox 
     containerAdd hbox c
     containerAdd hbox ass
     containerAdd hbox ram
@@ -158,5 +165,7 @@ createButton window counter env f = do
     -- Increment the counter when the button is pressed.
     button `on` buttonActivated $ do
         modifyIORef' counter f
-        redraw window counter env
+        env' <- env
+        newEnv <- (readIORef counter) >>= (\num -> getExeStep env' num)
+        redraw window counter env (return newEnv)
     return button
