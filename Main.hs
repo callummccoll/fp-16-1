@@ -112,7 +112,7 @@ showDest d = case d of
     DPostDec _ l  -> showLocation l
     DPreInc _ l   -> showLocation l
     DPreDec _ l   -> showLocation l
-    DIndirect _ l -> showLocation l
+    DIndirect _ l -> "(" ++ (showLocation l) ++ ")"
 
 showLocation :: Location -> String
 showLocation l = case (lLoc l) of
