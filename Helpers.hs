@@ -12,8 +12,7 @@ changeWithPredicate p f x
 createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
 createTextAreaFrame title content editable = do
     frame <- createFrame title
-    area <- createTextArea content editable
-    containerAdd frame area
+    (createTextArea content editable) >>= (containerAdd frame)
     return frame
 
 createTextArea :: Maybe String -> Bool -> IO TextView
