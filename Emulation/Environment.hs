@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Environment (Cell, initCellWithInt, initCellWithUndefined, initCellWithIntruction, getIntFromCell, getInstructionFromCell, getInstructionStringFromCell, 
-					Symbol, sLabel, sAddr, symExists, getSymFromLabel,
+module Environment (Cell(..), getIntFromCell, getInstructionFromCell, getStringFromCell, 
 					Environment, eA, eSP, ePC, eRAM, eStaticSize, eStdIn, eStdOut, eSymTable, initEnvF, eThawEnv, freezeEnv, makeEnvFromAss) where
 
 import Data.Array
@@ -9,6 +8,7 @@ import Data.Array.IO
 import Data.List
 
 import Assembly
+import SymbolTable
 import ABR.Parser
 import ABR.Parser.Lexers
 
@@ -28,42 +28,11 @@ getIntFromCell (Int a) = a
 getInstructionFromCell :: Cell -> Instruction
 getInstructionFromCell (Inst x) = x
 
-getInstructionStringFromCell :: Cell -> String
-getInstructionStringFromCell (Inst x) = convertInstToString x
-
-initCellWithInt :: Int -> Cell
-initCellWithInt x = Int x
-
-initCellWithUndefined :: Cell
-initCellWithUndefined = Undefined
-
-initCellWithIntruction :: Instruction -> Cell
-initCellWithIntruction x = Inst x
-
-showCell :: Cell -> String
-showCell Undefined = "Undefined"
-showCell (Int x) = show x
-showCell (Inst x) = convertInstToString x
-
-
-data Symbol = Symbol {
-	sLabel :: String,
-	sAddr :: Int
-}
-	deriving Show
-	
-symExists :: String -> [Symbol] -> Bool
-symExists lbl ss = case ss of
-		[] -> False
-		(x:xs) -> if lbl == (sLabel x)
-			then True
-			else symExists lbl xs
-		
-getSymFromLabel :: String -> [Symbol] -> Symbol
-getSymFromLabel lbl ss = case ss of
-		(x:xs) -> if lbl == (sLabel x)
-			then x
-			else getSymFromLabel lbl xs
+getStringFromCell :: Cell -> String
+getStringFromCell cell = case cell of
+	Int c -> show c
+	Inst c -> convertInstToString c
+	_ -> ""
 
 data Environment = Environment {
 		eA :: Cell,
@@ -73,7 +42,7 @@ data Environment = Environment {
 		eStaticSize :: Int, -- the number of cells filled up by the ass prog, where the heap would start
 		eStdIn :: [Int],
 		eStdOut :: [Int],
-		eSymTable :: [Symbol]
+		eSymTable :: SymbolTable
 	}
    
 instance Show Environment where
@@ -88,8 +57,8 @@ instance Show Environment where
 		showString "\n   StdIn = " . shows (eStdIn e) .
 		showString "\n   StdOut = " . shows (eStdOut e) .
 		showString "\n   SstaticSize = " . shows (eStaticSize e) .
-		showString "\n   RAM = " . (showString (concat (intersperse "\n         " (map showCell (elems r))))) .
-		showString "\n   Symbols = " . (showString (concat (intersperse "\n             " (map show (eSymTable e))))) .
+		showString "\n   RAM = " . (showString (concat (intersperse "\n         " (map getStringFromCell (elems r))))) .
+		showString "\n   Symbols = " . shows (eSymTable e) .
 		showString "\n]\n" 
 	
 initEnvF :: Environment
@@ -101,7 +70,7 @@ initEnvF = Environment {
 		eStaticSize = 0,
 		eStdIn = [],
 		eStdOut = [],
-		eSymTable = []
+		eSymTable = emptyST
    }
    
 eThawEnv :: Environment -> IO Environment
@@ -118,19 +87,21 @@ freezeEnv e = do
 
 makeEnvFromAss :: String -> IO Environment
 makeEnvFromAss source = do
-   prog <- parseAss source
+	prog <- parseAss source
    
-   let inst = stripInstructions (pDec prog)   
-   --temp
-   let symTab = [(Symbol "X" 14), (Symbol "T" 15), (Symbol "Main" 4)]
-   let stdIn = [5]
+	st <- buildST prog
+	st' <-resolveST prog st
+	st'' <-verifyST prog st'
+	
+	let inst = stripInstructions prog
+	let stdIn = [5]
+
+	let env = initEnvF {eSP = memSize, eSymTable = st'', eStdIn = stdIn}
+	env' <- eThawEnv env
+
+	addInstToEnv inst 0 env'
    
-   let env = initEnvF {eSP = memSize, eSymTable = symTab, eStdIn = stdIn}
-   env' <- eThawEnv env
-   
-   addInstToEnv inst 0 env'
-   
-   return env'
+	return env'
    
 addInstToEnv :: [Instruction] -> Int -> Environment -> IO Environment
 addInstToEnv xs index env = case xs of
@@ -138,7 +109,7 @@ addInstToEnv xs index env = case xs of
 	(x:xs') -> let
 			Left ram = (eRAM env)
 		in do
-			writeArray ram index (initCellWithIntruction x)
+			writeArray ram index (Inst x)
 			addInstToEnv xs' (index+1) env
 	
 parseAss :: String -> IO Program
@@ -151,17 +122,18 @@ parseAss source = do
          let parseRes = (nofail $ total programP) tlps
          case parseRes of
             Error _ _     -> error "PARSER FAILED"
-            OK (program, _) -> return program	
+            OK (program, _) -> do
+				return program	
    
-stripInstructions :: [Declaration] -> [Instruction]
-stripInstructions decl = case decl of
+stripInstructions :: Program -> [Instruction]
+stripInstructions (Program decl) = case decl of
 	[] -> []
 	(x:xs) -> case x of 
-		DcLH p l -> stripInstructions xs
-		DcLB p l -> stripInstructions xs
-		DcAlloc p a -> stripInstructions xs
-		DcInst p i -> [i] ++ stripInstructions xs
-		DcVal p v -> stripInstructions xs
+		DcLH p l -> stripInstructions (Program xs)
+		DcLB p l -> stripInstructions (Program xs)
+		DcAlloc p a -> stripInstructions (Program xs)
+		DcInst p i -> [i] ++ stripInstructions (Program xs)
+		DcVal p v -> stripInstructions (Program xs)
 		
 convertInstToString :: Instruction -> String
 convertInstToString inst = case inst of
@@ -209,4 +181,4 @@ convertRegToString reg = rVal reg
 convertValueToString :: Value -> String
 convertValueToString value = case (vVal value) of
 	Left x -> (idName x)	--Indentifier
-	Right x -> (uiVal x)	--Uint
+	Right x -> show (uiVal x)	--Uint

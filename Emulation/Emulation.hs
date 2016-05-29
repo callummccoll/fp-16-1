@@ -12,6 +12,7 @@
 import Data.Array
 import Data.Array.IO
 import Environment
+import SymbolTable
 import System.IO
 
 import Assembly
@@ -38,6 +39,7 @@ mainLoop = do
 			env'' <- freezeEnv env'
 			putStr ("\n-------------------\n" ++ show env'' ++ "\n")
 			mainLoop
+			return ()
 	
 getExeStep :: Environment -> Int -> IO Environment
 getExeStep env steps = case steps of
@@ -51,7 +53,7 @@ doExecutionStep env = do
 	let Left ram = (eRAM env)
 	cell <- readArray ram (ePC env)
 	let inst = getInstructionFromCell cell
-	putStr (getInstructionStringFromCell cell ++ "\n")
+	putStr (getStringFromCell cell ++ "\n")
 	--putStr (show inst ++ "\n")
 	readInstruction inst env
 		
@@ -93,11 +95,11 @@ actionCall name env = case (vVal name) of
 				incrementPC env'
 			_ -> do
 				env' <- addToStack (ePC env) env
-				let addr = (sAddr (getSymFromLabel n (eSymTable env')))
+				let addr = (getAddress n env')
 				let d = DRegister (vPos name) (Register (vPos name) "PC")
 				setDestValue d addr env'
 	Right ui -> do
-		let x = read (uiVal ui)
+		let x = (uiVal ui)
 		let d = DRegister (vPos name) (Register (vPos name) "PC")
 		setDestValue d x env
 
@@ -210,7 +212,7 @@ actionBEQ addr env = do
 			let s = Source (0,0) (Left (DValue (0,0) addr))
 			x <- getSourceValue s env
 			return (fst x) {ePC = (snd x)}
-		Right ui -> return env {ePC = read (uiVal ui)}
+		Right ui -> return env {ePC = (uiVal ui)}
 	else incrementPC env'
 	
 -- BNE: If Accumulator != 0, PC is set to addr given
@@ -226,7 +228,7 @@ actionBNE addr env = do
 			let s = Source (0,0) (Left (DValue (0,0) addr))
 			x <- getSourceValue s env
 			return (fst x) {ePC = (snd x)}
-		Right ui -> return env {ePC = read (uiVal ui)}
+		Right ui -> return env {ePC = (uiVal ui)}
 	else incrementPC env'
 		
 -- BLT: If Accumulator < 0, PC is set to addr given
@@ -242,7 +244,7 @@ actionBLT addr env = do
 			let s = Source (0,0) (Left (DValue (0,0) addr))
 			x <- getSourceValue s env
 			return (fst x) {ePC = (snd x)}
-		Right ui -> return env {ePC = read (uiVal ui)}
+		Right ui -> return env {ePC = (uiVal ui)}
 	else incrementPC env'
 
 -- BGT: If Accumulator > 0, PC is set to addr given
@@ -258,7 +260,7 @@ actionBGT addr env = do
 			let s = Source (0,0) (Left (DValue (0,0) addr))
 			x <- getSourceValue s env
 			return (fst x) {ePC = (snd x)}
-		Right ui -> return env {ePC = read (uiVal ui)}
+		Right ui -> return env {ePC = (uiVal ui)}
 	else incrementPC env'
 
 -- BLE: If Accumulator <= 0, PC is set to addr given
@@ -274,7 +276,7 @@ actionBLE addr env = do
 			let s = Source (0,0) (Left (DValue (0,0) addr))
 			x <- getSourceValue s env
 			return (fst x) {ePC = (snd x)}
-		Right ui -> return env {ePC = read (uiVal ui)}
+		Right ui -> return env {ePC = (uiVal ui)}
 	else incrementPC env'
 
 -- BGE: If Accumulator >= 0, PC is set to addr given
@@ -290,7 +292,7 @@ actionBGE addr env = do
 			let s = Source (0,0) (Left (DValue (0,0) addr))
 			x <- getSourceValue s env
 			return (fst x) {ePC = (snd x)}
-		Right ui -> return env {ePC = read (uiVal ui)}
+		Right ui -> return env {ePC = (uiVal ui)}
 	else incrementPC env'
 
 -- Print: Takes the given Int and puts it into the StdOut
@@ -302,21 +304,19 @@ functionRead :: Environment -> Environment
 functionRead env = let
 		stdIn = (eStdIn env)
 	in case stdIn of
-		[] -> env {eA = initCellWithUndefined}
-		(x:xs) -> env {eA = (initCellWithInt x)}
-		
+		[] -> env {eA = Undefined}
+		(x:xs) -> env {eA = (Int x)}
 
-		
 -----------------------------------------------------------
 setDestValue :: Dest -> Int -> Environment -> IO Environment
 setDestValue dest srcValue env = case dest of
 	DRegister _ r -> case (rVal r) of 
 		"PC" -> return env {ePC = srcValue}
 		"SP" -> return env {eSP = srcValue}
-		"A" -> return env {eA = (initCellWithInt srcValue)}
+		"A" -> return env {eA = (Int srcValue)}
 	DValue _ v -> case (vVal v) of 
-		Left iden -> setIDestValue (sAddr(getSymFromLabel (idName iden) (eSymTable env))) srcValue env
-		Right ui -> setIDestValue (read(uiVal ui)) srcValue env
+		Left iden -> setIDestValue (getAddress (idName iden) env) srcValue env
+		Right ui -> setIDestValue (uiVal ui) srcValue env
 	DIndex p l v -> do
 		let s = Source p (Right v) -- first find what v is 
 		x <- getSourceValue s env
@@ -326,14 +326,14 @@ setDestValue dest srcValue env = case dest of
 					s' = Source p (Left d')
 				in do
 					x' <- getSourceValue s' env
-					let dv = DValue p (Value p (Right (Uint p (show ((snd x') + (snd x))))))
+					let dv = DValue p (Value p (Right (Uint p ((snd x') + (snd x)))))
 					setDestValue dv srcValue env
 			Right v -> let
 					d' = (DValue p v)
 					s' = Source p (Left d')
 				in do
 					x' <- getSourceValue s' env
-					let dv = DValue p (Value p (Right (Uint p (show ((snd x') + (snd x))))))
+					let dv = DValue p (Value p (Right (Uint p ((snd x') + (snd x)))))
 					setDestValue dv srcValue env
 	DPostInc p l -> case (lLoc l) of 
 		Left reg -> let
@@ -405,21 +405,21 @@ setDestValue dest srcValue env = case dest of
 				s = Source p (Left d)
 			in do
 				x <- getSourceValue s env
-				let dv = DValue p (Value p (Right (Uint p (show (snd x)))))
+				let dv = DValue p (Value p (Right (Uint p (snd x))))
 				setDestValue dv srcValue (fst x)
 		Right v -> let
 				d = (DValue p v)
 				s = Source p (Left d)
 			in do
 				x <- getSourceValue s env
-				let dv = DValue p (Value p (Right (Uint p (show (snd x)))))
+				let dv = DValue p (Value p (Right (Uint p (snd x))))
 				setDestValue dv srcValue (fst x)
 	
 setIDestValue :: Int -> Int -> Environment -> IO Environment
 setIDestValue addr value env = let
 		Left ram = (eRAM env)
 	in do
-		writeArray ram addr (initCellWithInt value)
+		writeArray ram addr (Int value)
 		return env
 	
 getSourceValue :: Source -> Environment -> IO (Environment, Int)
@@ -431,10 +431,10 @@ getSourceValue src env = case (sVal src) of
 			"A" -> return (env, (getIntFromCell (eA env)))
 		DValue _ v -> case (vVal v) of
 			Left iden -> do
-				x <- getIDestValue (sAddr(getSymFromLabel (idName iden) (eSymTable env))) env
+				x <- getIDestValue (getAddress (idName iden) env) env
 				return (env, x)
 			Right ui -> do
-				x <- getIDestValue (read(uiVal ui)) env
+				x <- getIDestValue (uiVal ui) env
 				return (env, x)
 		DIndex p l v -> do
 			let s = Source (0,0) (Right v) -- first find what v is 
@@ -444,13 +444,13 @@ getSourceValue src env = case (sVal src) of
 					let d' = (DRegister (0,0) reg)
 					let s' = Source (0,0) (Left d')
 					x' <- getSourceValue s' (fst x)
-					let s'' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show ((snd x)+(snd x'))))))))
+					let s'' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) ((snd x)+(snd x')))))))
 					getSourceValue s'' (fst x')
 				Right v -> do
 					let d' = (DValue (0,0) v)
 					let s' = Source (0,0) (Left d')
 					x' <- getSourceValue s' (fst x)
-					let s'' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show ((snd x)+(snd x'))))))))
+					let s'' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) ((snd x)+(snd x')))))))
 					getSourceValue s'' (fst x')
 		DPostInc p l -> case (lLoc l) of 
 			Left reg -> do
@@ -529,17 +529,17 @@ getSourceValue src env = case (sVal src) of
 				let d = (DRegister (0,0) reg)
 				let s = Source (0,0) (Left d)
 				x <- getSourceValue s env
-				let s' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show (snd x)))))))
+				let s' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (snd x))))))
 				getSourceValue s' (fst x)
 			Right v -> do
 				let d = (DValue (0,0) v)
 				let s = Source (0,0) (Left d)
 				x <- getSourceValue s env
-				let s' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (show (snd x)))))))
+				let s' = Source (0,0) (Left (DValue (0,0) (Value (0,0) (Right (Uint (0,0) (snd x))))))
 				getSourceValue s' (fst x)
 	Right value -> case (vVal value) of 
-		Left iden -> return (env, sAddr(getSymFromLabel (idName iden) (eSymTable env)))
-		Right ui -> return (env, read (uiVal ui))
+		Left iden -> return (env, getAddress (idName iden) env)
+		Right ui -> return (env, uiVal ui)
 
 getIDestValue :: Int -> Environment -> IO Int
 getIDestValue addr env = let
@@ -549,12 +549,14 @@ getIDestValue addr env = let
 		return (getIntFromCell cell)
 		
 getAddress :: String -> Environment -> Int
-getAddress x env = let
-		exists = symExists x (eSymTable env)
-	in if exists == True
-		then (sAddr (getSymFromLabel x (eSymTable env)))
-		else read x
-	
+getAddress lbl env = let
+		sym = lookupST lbl (eSymTable env)
+	in case sym of
+		Just s -> case stValue s of
+			Known i -> i
+			_ -> -1	--should never happen if Symbol is built.
+		Nothing -> read lbl
+
 -- A convenience function that puts an Int onto the stack and decrements the SP
 addToStack :: Int -> Environment -> IO Environment
 addToStack x env = do
@@ -565,8 +567,3 @@ addToStack x env = do
 -- A convenience function that increments the PC.
 incrementPC :: Environment -> IO Environment
 incrementPC env = return env {ePC = (ePC env)+1}
-		
-	
-
-	
-	
