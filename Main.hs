@@ -34,8 +34,7 @@ main = do
     mainGUI
 
 environmentFromFile :: String -> IO Environment
-environmentFromFile filename = do
-    ((readFile filename) >>= makeEnvFromAss)
+environmentFromFile filename = (readFile filename) >>= makeEnvFromAss
 
 redraw :: Window -> IORef Int -> IO ()
 redraw window num = do
