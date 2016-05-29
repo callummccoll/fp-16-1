@@ -14,10 +14,6 @@ import Data.IORef
 import Data.Array.MArray
 import Data.Array
 
-type Point2d = (Double, Double)
-type Time = Double
-type Behavior a = Time -> a
-
 main :: IO ()
 main = do
     mainLoop
