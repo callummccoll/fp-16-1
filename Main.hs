@@ -52,8 +52,8 @@ createDrawing window x startEnv env = do
     ram        <- getRamFromEnvironment env
     io         <- createIO
     vbox       <- vBoxNew True 10
-    nextButton <- createButton window x startEnv (changeWithPredicate (<= 11) (+ 1))
-    prevButton <- createButton window x startEnv (changeWithPredicate (>= 0) (flip (-) 1))
+    nextButton <- createButton window x startEnv "next" (changeWithPredicate (<= 11) (+ 1))
+    prevButton <- createButton window x startEnv "previous" (changeWithPredicate (>= 0) (flip (-) 1))
     containerAdd vbox nextButton
     containerAdd vbox prevButton
     containerAdd hbox vbox 
@@ -159,9 +159,9 @@ createIO = do
     containerAdd vbox stdout
     return vbox
 
-createButton :: Window -> IORef Int -> IO Environment -> (Int -> Int) -> IO Button
-createButton window counter env f = do
-    button <- (readIORef counter) >>= (\num -> buttonNewWithLabel ("test " ++ (show num)))
+createButton :: Window -> IORef Int -> IO Environment -> String -> (Int -> Int) -> IO Button
+createButton window counter env name f = do
+    button <- (readIORef counter) >>= (\num -> buttonNewWithLabel (name ++ " " ++ (show num)))
     -- Increment the counter when the button is pressed.
     button `on` buttonActivated $ do
         modifyIORef' counter f
