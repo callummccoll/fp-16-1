@@ -3,7 +3,7 @@ module Helpers where
 import "gtk3" Graphics.UI.Gtk
 import Data.IORef
 
-changeWithPredicate :: (Integral a) => (a -> Bool) -> (a -> a) -> a -> a
+changeWithPredicate :: (a -> Bool) -> (a -> a) -> a -> a
 changeWithPredicate p f x
   | p x' = x'
   | otherwise = x
