@@ -17,16 +17,31 @@ import SymbolTable
 import System.IO
 
 import Assembly
+
+getFullProgEnv :: Environment -> IO (IOArray Int Environment)
+getFullProgEnv env = case (eRAM env) of
+	Left ram -> do
+		--Make a copy of the enviroment we are given.
+		rL <- getElems ram
+		ram' :: IOArray Int Cell <- newListArray (0,((length rL)-1)) rL
+		let env' = env {eRAM = (Left ram')}
+		--Send it through the emulator to store all the steps.
+		envs <- getProgList env' 0 []	
+		envs' <- newListArray (0, ((length envs)-1)) envs
+		return envs'
+	Right r -> error $ "Cannot Emulate with frozen RAM"
 	
-getFullProgEnv :: Environment -> Int -> [Environment] -> IO [Environment]
-getFullProgEnv env count envs = do
+getProgList :: Environment -> Int -> [Environment] -> IO [Environment]
+getProgList env count envs = do
 	env' <- getExeStep env 1
 	if (ePC env') == (ePC env)
 	then do
 		return envs
 	else do
-		let envs' = (envs ++ [env'])
-		getFullProgEnv env' (count+1) envs
+		e <- freezeEnv env'
+		let env'' = env' {eRAM = (eRAM(e))}
+		let envs' = (envs ++ [env''])
+		getProgList env' (count+1) envs'
 	
 getExeStep :: Environment -> Int -> IO Environment
 getExeStep env steps = case steps of
@@ -36,16 +51,18 @@ getExeStep env steps = case steps of
 		getExeStep env' (steps-1)				
 
 doExecutionStep :: Environment -> IO Environment
-doExecutionStep env = do
-	let Left ram = (eRAM env)
-	cell <- readArray ram (ePC env)
-	case (cVal cell) of
-		Int i -> error $ "Memory Error: " ++ show i
-		Inst i -> do
-			--putStr (getStringFromCVal (cVal cell) ++ "\n")
-			--putStr (show inst ++ "\n")
-			readInstruction i env
-		_ -> error $ "Memory Error: Undefined"
+doExecutionStep env = case (eRAM env) of 
+	Left ram -> do
+		cell <- readArray ram (ePC env)
+		case (cVal cell) of
+			Int i -> error $ "Memory Error: " ++ show i
+			Inst i -> do
+				--putStr (getStringFromCVal (cVal cell) ++ "\n")
+				--putStr (show inst ++ "\n")
+				readInstruction i env
+			_ -> error $ "Memory Error: Undefined"
+	Right ran -> error $ "Cannot Emulate with frozen RAM"
+	
 		
 readInstruction :: Instruction -> Environment -> IO Environment
 readInstruction inst env = case inst of

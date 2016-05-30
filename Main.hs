@@ -27,9 +27,11 @@ main = do
     -- Draw the Window.
     env <- environmentFromFile "test.ass"
 	
-	-- Does not work yet.
-    -- envs <- getFullProgEnv env 0 []
-    --putStr (show envs)
+	-- Command for getting all environments for a prog
+	-- envs is an IOArray for quick lookup.
+    envs <- getFullProgEnv env
+    --t <- getElems envs 
+    --print t
 	
     redraw window counter env env
     -- Stop the application when the window is closed.
