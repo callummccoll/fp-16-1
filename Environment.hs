@@ -92,16 +92,19 @@ freezeEnv :: Environment -> IO Environment
 freezeEnv e = do
 	let Left r = eRAM e
 	r' <- freeze r
-	return $ e {eRAM = Right r'}
-
+	return $ e {eRAM = Right r'}   
+	
 makeEnvFromAss :: String -> IO Environment
 makeEnvFromAss source = do
 	prog <- parseAss source
-
+	
 	st <- buildST prog
-	st' <-resolveST prog st
-	st'' <-verifyST prog st'
-
+	--add our special case symbols that point nowhere.
+	let st' = insertST "print" (STEntry (0,0) (Known 0)) st
+	let st'' = insertST "read" (STEntry (0,0) (Known 0)) st'
+	st''' <- resolveST prog st''
+	st'''' <-verifyST prog st'''
+	
 	let stdIn = [5]
 
 	let env = initEnvF {eSP = memSize, eSymTable = st'', eStdIn = stdIn}
@@ -109,8 +112,8 @@ makeEnvFromAss source = do
 
 	env'' <- loadMemory prog 0 env'
 
-	t <- freezeEnv env''
-	print t
+	--t <- freezeEnv env''
+	--print t
 
 	return env''
 	
@@ -141,11 +144,11 @@ loadMemory (Program ds) index env = case ds of
 			DcAlloc p a -> case (aVal a) of
 				Just v -> case (vVal v) of
 					Right ui -> do
-						env' <- loadAlloc (uiVal ui) env
+						env' <- loadAlloc index (uiVal ui) env
 						loadMemory (Program xs) (index+(uiVal ui)) env
 					Left iden -> error $ "Symbol Table Not Resolved"
 				Nothing -> do
-					env' <- loadAlloc 1 env
+					env' <- loadAlloc index 1 env
 					loadMemory (Program xs) (index+1) env'
 			DcInst p i -> do
 				cell <- readArray ram index
@@ -158,15 +161,15 @@ loadMemory (Program ds) index env = case ds of
 					loadMemory (Program xs) (index+1) env
 				Left iden -> error $ "Symbol Table Not Resolved"
 
-loadAlloc :: Int -> Environment -> IO Environment
-loadAlloc index env = let 
+loadAlloc :: Int -> Int-> Environment -> IO Environment
+loadAlloc index count env = let 
 		Left ram = (eRAM env)
-	in case index of
+	in case count of
 		0 -> return env
 		i -> do
-			cell <- readArray ram index
-			writeArray ram index (cell {cVal = Undefined})
-			loadAlloc (index-1) env
+			cell <- readArray ram (index+(count-1))
+			writeArray ram (index+(count-1)) (cell {cVal = Undefined})
+			loadAlloc index (count-1) env
 				
 convertInstToString :: Instruction -> String
 convertInstToString inst = case inst of
