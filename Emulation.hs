@@ -17,22 +17,16 @@ import SymbolTable
 import System.IO
 
 import Assembly
-
-mainLoop :: IO ()
-mainLoop = do
-    return ()
-    {-src <- getContents	
-	let n = 15--(read input)
-	case n of
-		0 -> return ()
-		_ -> do
-			putStr "\n"
-			env <- makeEnvFromAss src
-			env' <- getExeStep env n
-			env'' <- freezeEnv env'
-			putStr ("\n-------------------\n" ++ show env'' ++ "\n")
-			mainLoop
-			return ()-}
+	
+getFullProgEnv :: Environment -> Int -> [Environment] -> IO [Environment]
+getFullProgEnv env count envs = do
+	env' <- getExeStep env 1
+	if (ePC env') == (ePC env)
+	then do
+		return envs
+	else do
+		let envs' = (envs ++ [env'])
+		getFullProgEnv env' (count+1) envs
 	
 getExeStep :: Environment -> Int -> IO Environment
 getExeStep env steps = case steps of
@@ -48,7 +42,7 @@ doExecutionStep env = do
 	case (cVal cell) of
 		Int i -> error $ "Memory Error: " ++ show i
 		Inst i -> do
-			putStr (getStringFromCVal (cVal cell) ++ "\n")
+			--putStr (getStringFromCVal (cVal cell) ++ "\n")
 			--putStr (show inst ++ "\n")
 			readInstruction i env
 		_ -> error $ "Memory Error: Undefined"

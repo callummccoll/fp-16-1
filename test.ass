@@ -10,5 +10,5 @@ Main:
 	CALL print	// write to stdout
 	ADD #2 SP
 	RETURN
-X:	?1
-T:	?1
+X:	5
+T:	12

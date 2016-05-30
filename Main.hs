@@ -18,7 +18,6 @@ import Data.List
 
 main :: IO ()
 main = do
-    mainLoop
     initGUI
     -- A counter which is incremented when the button is pressed.
     counter <- newIORef 0
@@ -27,6 +26,11 @@ main = do
     windowSetDefaultSize window 1200 800
     -- Draw the Window.
     env <- environmentFromFile "test.ass"
+	
+	-- Does not work yet.
+    -- envs <- getFullProgEnv env 0 []
+    --putStr (show envs)
+	
     redraw window counter env env
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do

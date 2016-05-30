@@ -15,7 +15,7 @@ import ABR.Parser.Lexers
 
 -- the number of cells, indexed from 0,
 memSize :: Int
-memSize = 20
+memSize = 24
 
 data CVal = 
 	  Undefined
@@ -107,7 +107,7 @@ makeEnvFromAss source = do
 	
 	let stdIn = [5]
 
-	let env = initEnvF {eSP = memSize, eSymTable = st'', eStdIn = stdIn}
+	let env = initEnvF {eSP = memSize, eSymTable = st'''', eStdIn = stdIn}
 	env' <- eThawEnv env
 
 	env'' <- loadMemory prog 0 env'
