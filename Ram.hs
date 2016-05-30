@@ -20,7 +20,7 @@ getRamFromArray env ram = (extractRegisters env) >>= (createRam (extractCell <$>
 
 extractRegisters :: Environment -> IO [(String, String)]
 extractRegisters env = do
-    return [("A", show (eA env)), ("SP", show (eSP env)), ("PC", show (ePC env)) ]
+    return [("A", showCVal (eA env)), ("SP", show (eSP env)), ("PC", show (ePC env)) ]
 
 extractCell :: Cell -> (Maybe String, String)
 extractCell c = case (cLabel c, cVal c) of

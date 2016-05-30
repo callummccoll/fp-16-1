@@ -1,6 +1,7 @@
 module Presentation where
 
 import Assembly
+import Environment
 
 showInstruction :: Instruction -> String
 showInstruction i = case i of
@@ -63,3 +64,9 @@ showUInt ui = show $ uiVal ui
 
 showRegister :: Register -> String
 showRegister r = (rVal r)
+
+showCVal :: CVal -> String
+showCVal cv = case cv of
+    Undefined -> "-"
+    Int x     -> show x
+    Inst ins  -> showInstruction ins
