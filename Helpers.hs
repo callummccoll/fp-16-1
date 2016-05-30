@@ -41,3 +41,6 @@ createFrame s = case s of
         frameSetLabel frame s'
         frameSetLabelAlign frame 0.5 0.5
         return frame
+
+toLines :: (Show a) => [a] -> String
+toLines xs = concat ((\x -> (show x) ++ "\n") <$> xs)

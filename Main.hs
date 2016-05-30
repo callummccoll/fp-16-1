@@ -63,8 +63,8 @@ createButtons window x startEnv = do
 createIO :: Environment -> IO VBox
 createIO env = do
     vbox   <- vBoxNew True 10
-    (createTextAreaFrame (Just "Stdin") (Just (concat (show <$> (eStdIn env)))) False) >>= (containerAdd vbox)
-    (createTextAreaFrame (Just "Stdout") (Just (concat (show <$> (eStdOut env)))) False) >>= (containerAdd vbox)
+    (createTextAreaFrame (Just "Stdin") (Just (toLines $ eStdIn env)) False) >>= (containerAdd vbox)
+    (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) False) >>= (containerAdd vbox)
     return vbox
 
 createButton :: Window -> IORef Int -> Environment -> String -> (Int -> Int) -> IO Button
