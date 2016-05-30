@@ -14,6 +14,7 @@ import Control.Monad.Trans
 import Data.IORef
 import Data.Array.MArray
 import Data.Array
+import Data.List
 
 main :: IO ()
 main = do
@@ -48,7 +49,7 @@ createDrawing window x startEnv env = do
     (createFrame $ Just "C") >>= (containerAdd hbox)
     (createFrame $ Just "Assembly") >>= (containerAdd hbox)
     (getRamFromEnvironment env) >>= (containerAdd hbox)
-    createIO >>= (containerAdd hbox)
+    (createIO env) >>= (containerAdd hbox)
     containerAdd window hbox
     widgetShowAll window
 
@@ -59,11 +60,11 @@ createButtons window x startEnv = do
     (createButton window x startEnv "previous" (changeWithPredicate (>= 0) (flip (-) 1))) >>= (containerAdd vbox)
     return vbox
 
-createIO :: IO VBox
-createIO = do
+createIO :: Environment -> IO VBox
+createIO env = do
     vbox   <- vBoxNew True 10
-    (createTextAreaFrame (Just "Stdin") Nothing False) >>= (containerAdd vbox)
-    (createTextAreaFrame (Just "Stdout") Nothing False) >>= (containerAdd vbox)
+    (createTextAreaFrame (Just "Stdin") (Just (concat (show <$> (eStdIn env)))) False) >>= (containerAdd vbox)
+    (createTextAreaFrame (Just "Stdout") (Just (concat (show <$> (eStdOut env)))) False) >>= (containerAdd vbox)
     return vbox
 
 createButton :: Window -> IORef Int -> Environment -> String -> (Int -> Int) -> IO Button
