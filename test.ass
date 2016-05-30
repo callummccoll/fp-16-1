@@ -7,9 +7,8 @@ Main:
 	MOVE (SP) A
 	ADD (T) A
 	MOVE A (SP)1
-	MOVE (SP)1 A
 	CALL print	// write to stdout
 	ADD #2 SP
 	RETURN
-X:	?
-T:	?
+X:	?1
+T:	?1
