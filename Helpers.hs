@@ -9,6 +9,14 @@ changeWithPredicate p f x
   | otherwise = x
   where x' = f x
 
+createButton :: (() -> IO Button) -> (() -> IO ()) -> IO Button
+createButton factory action = do
+    button <- factory ()
+    -- Increment the counter when the button is pressed.
+    button `on` buttonActivated $ do
+        action ()
+    return button
+
 createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
 createTextAreaFrame title content editable = do
     frame <- createFrame title

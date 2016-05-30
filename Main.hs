@@ -56,9 +56,20 @@ createDrawing window x startEnv env = do
 createButtons :: Window -> IORef Int -> Environment -> IO VBox
 createButtons window x startEnv = do
     vbox <- vBoxNew True 10
-    (createButton window x startEnv "next" (changeWithPredicate (<= 11) (+ 1))) >>= (containerAdd vbox)
-    (createButton window x startEnv "previous" (changeWithPredicate (>= 0) (flip (-) 1))) >>= (containerAdd vbox)
+    (createButton (createButtonFactory "next" x) (createButtonAction window x startEnv (changeWithPredicate (<= 11) (+ 1)))) >>= (containerAdd vbox)
+    (createButton (createButtonFactory "previous" x) (createButtonAction window x startEnv (changeWithPredicate (>= 0) (flip (-) 1)))) >>= (containerAdd vbox)
     return vbox
+
+createButtonFactory :: String -> IORef Int -> (() -> IO Button)
+createButtonFactory name counter = (\_ -> do
+    (readIORef counter) >>= (\num -> buttonNewWithLabel (name ++ " " ++ (show num)))
+    )
+
+createButtonAction :: Window -> IORef Int -> Environment -> (Int -> Int) -> (() -> IO ())
+createButtonAction window counter env f = (\_ -> do
+    modifyIORef' counter f
+    (readIORef counter) >>= (getExeStep env) >>= (redraw window counter env)
+    )
 
 createIO :: Environment -> IO VBox
 createIO env = do
@@ -66,12 +77,3 @@ createIO env = do
     (createTextAreaFrame (Just "Stdin") (Just (toLines $ eStdIn env)) False) >>= (containerAdd vbox)
     (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) False) >>= (containerAdd vbox)
     return vbox
-
-createButton :: Window -> IORef Int -> Environment -> String -> (Int -> Int) -> IO Button
-createButton window counter env name f = do
-    button <- (readIORef counter) >>= (\num -> buttonNewWithLabel (name ++ " " ++ (show num)))
-    -- Increment the counter when the button is pressed.
-    button `on` buttonActivated $ do
-        modifyIORef' counter f
-        (readIORef counter) >>= (getExeStep env) >>= (redraw window counter env)
-    return button
