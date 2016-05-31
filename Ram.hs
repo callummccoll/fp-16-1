@@ -57,7 +57,7 @@ attachCellsToTable table cells row
 createRowCell :: Int -> IO Frame
 createRowCell row = do
     frame <- createFrame Nothing
-    alignment <- alignmentNew 0 0 1 1
+    alignment <- alignmentNew 0.5 0 1 1
     alignmentSetPadding alignment 0 0 2 2
     (labelNew (Just (show row))) >>= (containerAdd alignment)
     containerAdd frame alignment
@@ -67,7 +67,7 @@ createRow :: (Maybe String, String) -> IO (Frame, Frame)
 createRow (label, content) = do
     labelFrame <- createFrame Nothing
     contentFrame <- createFrame Nothing
-    labelAlignment <- alignmentNew 0 0 1 1
+    labelAlignment <- alignmentNew 1 0 1 1
     contentAlignment <- alignmentNew 0 0 1 1
     alignmentSetPadding labelAlignment 5 5 5 5
     alignmentSetPadding contentAlignment 5 5 5 5
