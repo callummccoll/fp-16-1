@@ -48,12 +48,20 @@ attachCellsToTable table cells row
     | row >= (length cells) = return table
     | otherwise             = do
         (label, content) <- cells ! row
-        rowFrame <- createFrame Nothing
-        (labelNew (Just (show row))) >>= (containerAdd rowFrame)
-        tableAttach table rowFrame 0 1 row (row + 1) [Fill] [Fill] 0 0
+        rowCell <- createRowCell row
+        tableAttach table rowCell 0 1 row (row + 1) [Fill] [Fill] 0 0
         tableAttach table label 1 2 row (row + 1) [Fill] [Fill] 0 0
         tableAttach table content 2 3 row (row + 1) [Fill] [Fill] 0 0
         attachCellsToTable table cells (row + 1)
+
+createRowCell :: Int -> IO Frame
+createRowCell row = do
+    frame <- createFrame Nothing
+    alignment <- alignmentNew 0 0 1 1
+    alignmentSetPadding alignment 0 0 2 2
+    (labelNew (Just (show row))) >>= (containerAdd alignment)
+    containerAdd frame alignment
+    return frame
 
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
 createRow (label, content) = do
