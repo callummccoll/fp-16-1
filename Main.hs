@@ -67,8 +67,14 @@ currentEnvironment x envs = do
 createButtons :: Window -> IORef Int -> Array Int Environment -> IO VBox
 createButtons window x envs = do
     vbox <- vBoxNew True 10
-    (createButton (createButtonFactory "next" x) (createButtonAction window x envs (changeWithPredicate (< (length envs)) (+ 1)))) >>= (containerAdd vbox)
-    (createButton (createButtonFactory "previous" x) (createButtonAction window x envs (changeWithPredicate (>= 0) (flip (-) 1)))) >>= (containerAdd vbox)
+    (createButton (createButtonFactory "next" x)
+        (createButtonAction window x envs
+        (changeWithPredicate (< (length envs)) (+ 1))))
+        >>= (containerAdd vbox)
+    (createButton (createButtonFactory "previous" x)
+        (createButtonAction window x envs
+        (changeWithPredicate (>= 0) (flip (-) 1))))
+        >>= (containerAdd vbox)
     return vbox
 
 createButtonFactory :: String -> IORef Int -> (() -> IO Button)
