@@ -18,7 +18,7 @@ import System.IO
 
 import Assembly
 
-getFullProgEnv :: Environment -> IO (IOArray Int Environment)
+getFullProgEnv :: Environment -> IO (Array Int Environment)
 getFullProgEnv env = case (eRAM env) of
 	Left ram -> do
 		--Make a copy of the enviroment we are given.
@@ -26,9 +26,8 @@ getFullProgEnv env = case (eRAM env) of
 		ram' :: IOArray Int Cell <- newListArray (0,((length rL)-1)) rL
 		let env' = env {eRAM = (Left ram')}
 		--Send it through the emulator to store all the steps.
-		envs <- getProgList env' 0 []	
-		envs' <- newListArray (0, ((length envs)-1)) envs
-		return envs'
+		envs <- getProgList env' 0 [env']	
+		return (listArray (0, ((length envs)-1)) envs)
 	Right r -> error $ "Cannot Emulate with frozen RAM"
 	
 getProgList :: Environment -> Int -> [Environment] -> IO [Environment]

@@ -14,6 +14,7 @@ import Control.Monad.Trans
 import Data.IORef
 import Data.Array.MArray
 import Data.Array
+import Data.Array.IO
 import Data.List
 
 main :: IO ()
@@ -24,16 +25,14 @@ main = do
     -- The main window.
     window <- windowNew
     windowSetDefaultSize window 1200 800
-    -- Draw the Window.
+
     env <- environmentFromFile "test.ass"
-	
 	-- Command for getting all environments for a prog
 	-- envs is an IOArray for quick lookup.
     envs <- getFullProgEnv env
-    --t <- getElems envs 
-    --print t
 	
-    redraw window counter env env
+    -- Draw the Window.
+    redraw window counter envs 
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ do
         liftIO $ mainQuit
@@ -43,15 +42,16 @@ main = do
 environmentFromFile :: String -> IO Environment
 environmentFromFile filename = (readFile filename) >>= makeEnvFromAss
 
-redraw :: Window -> IORef Int -> Environment -> Environment -> IO ()
-redraw window num startEnv env = do
+redraw :: Window -> IORef Int -> Array Int Environment -> IO ()
+redraw window num envs = do
     containerForeach window (\w -> containerRemove window w)
-    createDrawing window num startEnv env
+    createDrawing window num envs
 
-createDrawing :: Window -> IORef Int -> Environment -> Environment -> IO ()
-createDrawing window x startEnv env = do
+createDrawing :: Window -> IORef Int -> Array Int Environment -> IO ()
+createDrawing window x envs = do
     hbox <- hBoxNew True 10
-    (createButtons window x startEnv) >>= (containerAdd hbox) 
+    env  <- currentEnvironment x envs
+    (createButtons window x envs) >>= (containerAdd hbox) 
     (createFrame $ Just "C") >>= (containerAdd hbox)
     (createFrame $ Just "Assembly") >>= (containerAdd hbox)
     (getRamFromEnvironment env) >>= (containerAdd hbox)
@@ -59,11 +59,16 @@ createDrawing window x startEnv env = do
     containerAdd window hbox
     widgetShowAll window
 
-createButtons :: Window -> IORef Int -> Environment -> IO VBox
-createButtons window x startEnv = do
+currentEnvironment :: IORef Int -> Array Int Environment -> IO Environment
+currentEnvironment x envs = do
+    i <- readIORef x
+    return (envs ! i)
+
+createButtons :: Window -> IORef Int -> Array Int Environment -> IO VBox
+createButtons window x envs = do
     vbox <- vBoxNew True 10
-    (createButton (createButtonFactory "next" x) (createButtonAction window x startEnv (changeWithPredicate (<= 11) (+ 1)))) >>= (containerAdd vbox)
-    (createButton (createButtonFactory "previous" x) (createButtonAction window x startEnv (changeWithPredicate (>= 0) (flip (-) 1)))) >>= (containerAdd vbox)
+    (createButton (createButtonFactory "next" x) (createButtonAction window x envs (changeWithPredicate (< (length envs)) (+ 1)))) >>= (containerAdd vbox)
+    (createButton (createButtonFactory "previous" x) (createButtonAction window x envs (changeWithPredicate (>= 0) (flip (-) 1)))) >>= (containerAdd vbox)
     return vbox
 
 createButtonFactory :: String -> IORef Int -> (() -> IO Button)
@@ -71,10 +76,10 @@ createButtonFactory name counter = (\_ -> do
     (readIORef counter) >>= (\num -> buttonNewWithLabel (name ++ " " ++ (show num)))
     )
 
-createButtonAction :: Window -> IORef Int -> Environment -> (Int -> Int) -> (() -> IO ())
-createButtonAction window counter env f = (\_ -> do
+createButtonAction :: Window -> IORef Int -> Array Int Environment -> (Int -> Int) -> (() -> IO ())
+createButtonAction window counter envs f = (\_ -> do
     modifyIORef' counter f
-    (readIORef counter) >>= (getExeStep env) >>= (redraw window counter env)
+    redraw window counter envs
     )
 
 createIO :: Environment -> IO VBox
