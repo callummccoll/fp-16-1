@@ -1,4 +1,4 @@
-module Ram (getRamFromEnvironment) where
+module Ram (createRamAndRegisters) where
 
 import Environment
 import Helpers
@@ -9,8 +9,8 @@ import Data.Array
 import Data.Array.MArray
 import Data.IORef
 
-getRamFromEnvironment :: Environment -> IO Frame
-getRamFromEnvironment env = do
+createRamAndRegisters:: Environment -> IO Frame
+createRamAndRegisters env = do
     case (eRAM env) of
         Left ram  -> (freeze ram) >>= (getRamFromArray env)
         Right ram -> getRamFromArray env ram

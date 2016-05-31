@@ -54,7 +54,7 @@ createDrawing window x envs = do
     (createButtons window x envs) >>= (containerAdd hbox) 
     (createFrame $ Just "C") >>= (containerAdd hbox)
     (createFrame $ Just "Assembly") >>= (containerAdd hbox)
-    (getRamFromEnvironment env) >>= (containerAdd hbox)
+    (createRamAndRegisters env) >>= (containerAdd hbox)
     (createIO env) >>= (containerAdd hbox)
     containerAdd window hbox
     widgetShowAll window
