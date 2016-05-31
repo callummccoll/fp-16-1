@@ -3,34 +3,31 @@
 # Callum McColl, 2016-05-06 18:49
 #
 
-HC=ghc
+HC = ghc
 
-BIN=main 
-ifeq ($(OS),Windows_NT)
-SRCDIR=.
-HSRC=Emulation.hs  Environment.hs  Helpers.hs  Main.hs  Ram.hs
-BUILDDIR=${SRCDIR}\build
-else
-SRCDIR!=pwd
-HSRC!=ls *.hs
-BUILDDIR=${SRCDIR}/build
-endif
-HCFLAGS=-fno-warn-tabs -i../machine/parser -XPackageImports
+BIN = main 
+SRCDIR = .
+BUILDDIR = $(SRCDIR)/build
+HSRC = Emulation.hs Environment.hs Helpers.hs Main.hs Presentation.hs Ram.hs
+HCFLAGS = -fno-warn-tabs -i../machine/parser -XPackageImports
 
 all:	clean run
 
 build:
-	mkdir ${BUILDDIR}
-	${HC} --make ${HSRC} ${HCFLAGS} -hidir ${BUILDDIR} -odir ${BUILDDIR} -outputdir ${BUILDDIR} -tmpdir ${BUILDDIR} -o ${BUILDDIR}/${BIN} 
+	echo "$(OS)"
+	echo "$(SRCDIR)"
+	echo "$(HCFLAGS)"
+	mkdir $(BUILDDIR)
+	$(HC) --make $(HSRC) $(HCFLAGS) -hidir $(BUILDDIR) -odir $(BUILDDIR) -outputdir $(BUILDDIR) -tmpdir $(BUILDDIR) -o $(BUILDDIR)/$(BIN) 
 
 run:	build
-	${BUILDDIR}/${BIN}
+	$(BUILDDIR)/$(BIN)
 
 clean:
 ifeq ($(OS),Windows_NT)
-	rmdir ${BUILDDIR} /s /q
+	rmdir $(BUILDDIR) /s /q
 else
-	rm -rf ${BUILDDIR}
+	rm -rf $(BUILDDIR)
 endif
 
 # vim:ft=make
