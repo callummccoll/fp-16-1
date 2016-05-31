@@ -39,7 +39,7 @@ createRam cs registers = do
 
 createRamTable :: Array Int (Maybe String, String) -> IO Table
 createRamTable cs = do
-    table <- (tableNew (length cs) 2 True)
+    table <- (tableNew (length cs) 3 False)
     attachCellsToTable table (createRow <$> cs) 0
 
 
@@ -48,8 +48,11 @@ attachCellsToTable table cells row
     | row >= (length cells) = return table
     | otherwise             = do
         (label, content) <- cells ! row
-        tableAttach table label 0 1 row (row + 1) [Fill] [Fill] 0 0
-        tableAttach table content 1 2 row (row + 1) [Fill] [Fill] 0 0
+        rowFrame <- createFrame Nothing
+        (labelNew (Just (show row))) >>= (containerAdd rowFrame)
+        tableAttach table rowFrame 0 1 row (row + 1) [Fill] [Fill] 0 0
+        tableAttach table label 1 2 row (row + 1) [Fill] [Fill] 0 0
+        tableAttach table content 2 3 row (row + 1) [Fill] [Fill] 0 0
         attachCellsToTable table cells (row + 1)
 
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
