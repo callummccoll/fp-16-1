@@ -14,9 +14,6 @@ HCFLAGS = -fno-warn-tabs -i../machine/parser -XPackageImports
 all:	clean run
 
 build:
-	echo "$(OS)"
-	echo "$(SRCDIR)"
-	echo "$(HCFLAGS)"
 	mkdir $(BUILDDIR)
 	$(HC) --make $(HSRC) $(HCFLAGS) -hidir $(BUILDDIR) -odir $(BUILDDIR) -outputdir $(BUILDDIR) -tmpdir $(BUILDDIR) -o $(BUILDDIR)/$(BIN) 
 
