@@ -8,7 +8,7 @@ HC = ghc
 BIN = main 
 SRCDIR = .
 BUILDDIR = $(SRCDIR)\build
-HSRC = Emulation.hs Environment.hs Helpers.hs Main.hs Presentation.hs Ram.hs
+HSRC = Emulation.hs Environment.lhs Helpers.hs Main.hs Presentation.hs Ram.hs
 HCFLAGS = -fno-warn-tabs -i../machine/parser -XPackageImports
 
 all:	clean run

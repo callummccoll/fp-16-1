@@ -40,7 +40,9 @@ main = do
     mainGUI
 
 environmentFromFile :: String -> IO Environment
-environmentFromFile filename = (readFile filename) >>= makeEnvFromAss
+environmentFromFile filename = do
+   ass <- readFile filename
+   makeEnvFromAss ass [5] --this is the stdin that needs to be linked in some way?
 
 redraw :: Window -> IORef Int -> Array Int Environment -> IO ()
 redraw window num envs = do

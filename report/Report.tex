@@ -1,0 +1,57 @@
+% version 1
+
+\documentclass{article}
+
+% prelude
+
+\usepackage{fancyvrb}
+\usepackage{graphicx}
+\usepackage[pdftex, backref, colorlinks, bookmarksnumbered=true]{hyperref}
+
+\DefineVerbatimEnvironment{code}{Verbatim}{}
+
+\newcommand{\highlight}[1]{\colorbox{yellow}{#1}}
+\newcommand{\highlighttt}[1]{\highlight{{\tt#1}}}
+
+\begin{document}
+
+
+
+\title{Visuals Report}
+\author{Callum McColl\\
+	    Andrew Paroz}
+		
+\maketitle
+
+\begin{abstract}
+We did stuff. And more stuff, then stuff happened.
+\end{abstract}
+
+\tableofcontents
+
+\listoffigures
+
+\section{Introduction}
+
+
+
+\section{Code}
+
+\subsection{Environment}
+
+\input{../Environment.lhs}
+
+\subsection{Emulation}
+
+\subsection{GUI}
+
+
+\section{Conclusion}
+
+We did stuff. And more stuff, then stuff happened.
+
+
+\end{document}
+
+
+
