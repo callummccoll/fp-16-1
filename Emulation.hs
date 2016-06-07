@@ -21,12 +21,10 @@ import Assembly
 getFullProgEnv :: Environment -> IO (Array Int Environment)
 getFullProgEnv env = case (eRAM env) of
 	Left ram -> do
-		--Make a copy of the enviroment we are given.
-		rL <- getElems ram
-		ram' :: IOArray Int Cell <- newListArray (0,((length rL)-1)) rL
-		let env' = env {eRAM = (Left ram')}
-		--Send it through the emulator to store all the steps.
-		envs <- getProgList env' 0 [env']	
+		-- Store the initial state of the environment
+		env' <- freezeEnv env
+		-- Send it through the emulator to store all the steps.
+		envs <- getProgList env 0 [env']
 		return (listArray (0, ((length envs)-1)) envs)
 	Right r -> error $ "Cannot Emulate with frozen RAM"
 	
@@ -37,10 +35,8 @@ getProgList env count envs = do
 	then do
 		return envs
 	else do
-		e <- freezeEnv env'
-		let env'' = env' {eRAM = (eRAM(e))}
-		let envs' = (envs ++ [env''])
-		getProgList env' (count+1) envs'
+		env'' <- freezeEnv env'
+		getProgList env' (count+1) (envs ++ [env''])
 	
 getExeStep :: Environment -> Int -> IO Environment
 getExeStep env steps = case steps of
