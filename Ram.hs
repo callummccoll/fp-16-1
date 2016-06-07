@@ -92,5 +92,5 @@ addRegisters vbox registers = case registers of
     r : rs -> do
         register <- r
         register >|> vbox
-        set vbox [boxChildPacking register := PackRepel]
+        vbox >:= [boxChildPacking register := PackRepel]
         addRegisters vbox rs
