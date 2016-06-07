@@ -32,7 +32,7 @@ createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
     hbox  <- hBoxNew False 10
     (createRamTable cs) >>|> hbox <<|<< (createRegisters registers)
-    hbox >|>> (createFrame $ Just "Ram and Registers")
+    hbox >|>> (createFrame "Ram and Registers")
 
 createRamTable :: Array Int (Maybe String, String) -> IO Table
 createRamTable cs = do
@@ -52,29 +52,22 @@ attachCellsToTable table cells row
         attachCellsToTable table cells (row + 1)
 
 createRowCell :: Int -> IO Frame
-createRowCell row = do
-    frame <- createFrame Nothing
-    alignment <- alignmentNew 0.5 0 1 1
-    alignmentSetPadding alignment 0 0 2 2
-    (labelNew (Just (show row))) >>|> alignment
-    alignment >|> frame
-    return frame
+createRowCell row = (labelNew (Just (show row)))
+    >>|>> (padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1))
+    >>|>> (frameNew)
 
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
 createRow (label, content) = do
-    labelFrame <- createFrame Nothing
-    contentFrame <- createFrame Nothing
-    labelAlignment <- alignmentNew 1 0 1 1
-    contentAlignment <- alignmentNew 0 0 1 1
-    alignmentSetPadding labelAlignment 5 5 5 5
-    alignmentSetPadding contentAlignment 5 5 5 5
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
-    label <- labelNew (label)
-    cell <- labelNew (Just content)
-    label >|> labelAlignment >>|> labelFrame
-    cell >|> contentAlignment >>|> eventBox >>|> contentFrame
-    return (labelFrame, contentFrame)
+    label <- (labelNew (label))
+        >>|>> (padWithAlignment (5, 5, 5, 5) (1, 0, 1, 1))
+        >>|>> (frameNew)
+    content <- (labelNew (Just content))
+        >>|>> (pad (5, 5, 5, 5))
+        >>|> eventBox
+        >>|>> (frameNew)
+    return (label, content)
 
 createRegisters :: [(String, String)] -> IO VBox
 createRegisters registers = do
@@ -85,7 +78,7 @@ createRegisters registers = do
 createRegister :: (String, String) -> IO HBox
 createRegister (register, content) = do
     hbox     <- hBoxNew False 10
-    frame    <- createFrame Nothing
+    frame    <- frameNew
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
     (labelNew (Just content)) >>|> eventBox >>|> frame

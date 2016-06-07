@@ -65,7 +65,7 @@ createDrawing window x assembly envs = do
     hbox <- hBoxNew True 10
     env  <- currentEnvironment x envs
     (createButtons window x assembly envs) >>|> hbox 
-    --(createFrame $ Just "C") >>= (containerAdd hbox)
+    --(createFrame $ "C") >>= (containerAdd hbox)
     (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>|> hbox
     (createRamAndRegisters env) >>|> hbox
     (createIO env) >>|> hbox

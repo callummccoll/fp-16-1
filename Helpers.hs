@@ -74,9 +74,10 @@ createButton factory action = do
 
 createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
 createTextAreaFrame title content editable = do
-    frame <- createFrame title
-    (createTextArea content editable) >>= (containerAdd frame)
-    return frame
+    frame <- case title of
+               Nothing -> frameNew
+               Just s  -> createFrame s
+    (createTextArea content editable) >>|> frame
 
 createTextArea :: Maybe String -> Bool -> IO TextView
 createTextArea content editable = case content of
@@ -86,6 +87,8 @@ createTextArea content editable = case content of
         textBufferSetText buffer s
         area <- textViewNewWithBuffer buffer
         set area [textViewEditable := editable]
+        textViewSetLeftMargin area 2
+        textViewSetRightMargin area 2
         return area
 
 createEmptyTextArea :: Bool -> IO TextView
@@ -94,16 +97,21 @@ createEmptyTextArea editable = do
     set area [textViewEditable := editable]
     return area
 
-createFrame :: Maybe String -> IO Frame
-createFrame s = case s of
-    Nothing -> do 
-        frame <- frameNew
-        return frame
-    Just s' -> do
-        frame <- frameNew
-        frameSetLabel frame s'
-        frameSetLabelAlign frame 0.5 0.5
-        return frame
+createFrame :: String -> IO Frame
+createFrame s = do
+    frame <- frameNew
+    frameSetLabel frame s
+    frameSetLabelAlign frame 0.5 0.5
+    return frame
 
 toLines :: (Show a) => [a] -> String
 toLines xs = concat ((\x -> (show x) ++ "\n") <$> xs)
+
+pad :: (Int, Int, Int, Int) -> IO Alignment
+pad padding = padWithAlignment padding (0, 0, 1, 1)
+
+padWithAlignment :: (Int, Int, Int, Int) -> (Float, Float, Float, Float) -> IO Alignment
+padWithAlignment (top, bottom, left, right) (xalign, yalign, xscale, yscale) = do
+    a <- alignmentNew xalign yalign xscale yscale
+    alignmentSetPadding a top bottom left right
+    return a
