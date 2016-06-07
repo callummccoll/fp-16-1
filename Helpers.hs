@@ -50,5 +50,20 @@ createFrame s = case s of
         frameSetLabelAlign frame 0.5 0.5
         return frame
 
+createBox :: (Float, Float, Float, Float) -> Maybe Color -> IO Alignment
+createBox (xalign, yalign, xscale, yscale) color = do
+    box <- alignmentNew xalign yalign xscale yscale
+    case color of
+        Just color' -> do
+            widgetModifyBg box StateNormal color'
+            return box
+        Nothing     -> return box
+
+createPaddedBox :: (Int, Int, Int, Int) -> (Float, Float, Float, Float) -> Maybe Color -> IO Alignment
+createPaddedBox (top, bottom, left, right) alignment color = do
+    box <- createBox alignment color
+    alignmentSetPadding box top right bottom left
+    return box
+
 toLines :: (Show a) => [a] -> String
 toLines xs = concat ((\x -> (show x) ++ "\n") <$> xs)
