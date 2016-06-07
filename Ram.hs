@@ -31,8 +31,8 @@ extractCell c = case (cLabel c, cVal c) of
 createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
     hbox  <- hBoxNew False 10
-    (createRamTable cs) >>| hbox <|<< (createRegisters registers)
-    hbox >|> (createFrame $ Just "Ram and Registers")
+    (createRamTable cs) >>|> hbox <<|<< (createRegisters registers)
+    hbox >|>> (createFrame $ Just "Ram and Registers")
 
 createRamTable :: Array Int (Maybe String, String) -> IO Table
 createRamTable cs = do
@@ -56,8 +56,8 @@ createRowCell row = do
     frame <- createFrame Nothing
     alignment <- alignmentNew 0.5 0 1 1
     alignmentSetPadding alignment 0 0 2 2
-    (labelNew (Just (show row))) >>| alignment
-    alignment >| frame
+    (labelNew (Just (show row))) >>|> alignment
+    alignment >|> frame
     return frame
 
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
@@ -72,8 +72,8 @@ createRow (label, content) = do
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
     label <- labelNew (label)
     cell <- labelNew (Just content)
-    label >| labelAlignment >>| labelFrame
-    cell >| contentAlignment >>| eventBox >>| contentFrame
+    label >|> labelAlignment >>|> labelFrame
+    cell >|> contentAlignment >>|> eventBox >>|> contentFrame
     return (labelFrame, contentFrame)
 
 createRegisters :: [(String, String)] -> IO VBox
@@ -88,9 +88,9 @@ createRegister (register, content) = do
     frame    <- createFrame Nothing
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
-    (labelNew (Just content)) >>| eventBox >>| frame
-    (labelNew (Just register)) >>| hbox
-    frame >| hbox
+    (labelNew (Just content)) >>|> eventBox >>|> frame
+    (labelNew (Just register)) >>|> hbox
+    frame >|> hbox
     return hbox
 
 addRegisters :: VBox -> [IO HBox] -> IO VBox
@@ -98,6 +98,6 @@ addRegisters vbox registers = case registers of
     []     -> return vbox
     r : rs -> do
         register <- r
-        register >| vbox
+        register >|> vbox
         set vbox [boxChildPacking register := PackRepel]
         addRegisters vbox rs

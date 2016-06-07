@@ -64,12 +64,12 @@ createDrawing :: Window -> IORef Int -> String -> Array Int Environment -> IO ()
 createDrawing window x assembly envs = do
     hbox <- hBoxNew True 10
     env  <- currentEnvironment x envs
-    (createButtons window x assembly envs) >>| hbox 
+    (createButtons window x assembly envs) >>|> hbox 
     --(createFrame $ Just "C") >>= (containerAdd hbox)
-    (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>| hbox
-    (createRamAndRegisters env) >>| hbox
-    (createIO env) >>| hbox
-    hbox >| window
+    (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>|> hbox
+    (createRamAndRegisters env) >>|> hbox
+    (createIO env) >>|> hbox
+    hbox >|> window
     widgetShowAll window
 
 currentEnvironment :: IORef Int -> Array Int Environment -> IO Environment
@@ -83,11 +83,11 @@ createButtons window x assembly envs = do
     (createButton (createButtonFactory "next" x)
         (createButtonAction window x assembly envs
         (changeWithPredicate (< (length envs)) (+ 1))))
-        >>| vbox
+        >>|> vbox
     (createButton (createButtonFactory "previous" x)
         (createButtonAction window x assembly envs
         (changeWithPredicate (>= 0) (flip (-) 1))))
-        >>| vbox
+        >>|> vbox
     return vbox
 
 createButtonFactory :: String -> IORef Int -> (() -> IO Button)
@@ -104,6 +104,6 @@ createButtonAction window counter assembly envs f = (\_ -> do
 createIO :: Environment -> IO VBox
 createIO env = do
     vbox   <- vBoxNew True 10
-    (createTextAreaFrame (Just "Stdin") (Just (toLines $ eStdIn env)) False) >>| vbox
-    (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) False) >>| vbox
+    (createTextAreaFrame (Just "Stdin") (Just (toLines $ eStdIn env)) False) >>|> vbox
+    (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) False) >>|> vbox
     return vbox
