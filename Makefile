@@ -22,7 +22,7 @@ build:
 	$(HC) --make $(HSRC) $(HCFLAGS) -hidir $(BUILDDIR) -odir $(BUILDDIR) -outputdir $(BUILDDIR) -tmpdir $(BUILDDIR) -o $(BUILDDIR)/$(BIN) 
 
 run:	build
-	$(BUILDDIR)/$(BIN)
+	$(BUILDDIR)/$(BIN) test.ass
 
 clean:
 ifeq ($(OS),Windows_NT)

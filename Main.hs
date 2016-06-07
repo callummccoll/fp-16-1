@@ -16,6 +16,7 @@ import Data.Array.MArray
 import Data.Array
 import Data.Array.IO
 import Data.List
+import System.Environment
 
 main :: IO ()
 main = do
@@ -26,18 +27,28 @@ main = do
     window <- windowNew
     windowSetDefaultSize window 1200 800
 
-    env <- environmentFromFile "test.ass"
-	-- Command for getting all environments for a prog
-	-- envs is an IOArray for quick lookup.
-    envs <- getFullProgEnv env
-	
-    -- Draw the Window.
-    redraw window counter envs 
-    -- Stop the application when the window is closed.
-    window `on` deleteEvent $ tryEvent $ do
-        liftIO $ mainQuit
-    -- Start the application.
-    mainGUI
+    file <- fileFromArgs 
+    case file of
+        Nothing    -> error "No File Specified"
+        Just file' -> do
+	        -- Command for getting all environments for a prog
+	        -- envs is an IOArray for quick lookup.
+            envs <- (environmentFromFile file') >>= getFullProgEnv 
+            -- Draw the Window.
+            redraw window counter envs
+            -- Stop the application when the window is closed.
+            -- Stop the application when the window is closed.
+            window `on` deleteEvent $ tryEvent $ do
+                liftIO $ mainQuit
+            -- Start the application.
+            mainGUI
+
+fileFromArgs :: IO (Maybe String)
+fileFromArgs = do
+    args <- getArgs
+    case args of
+        [] -> return Nothing
+        file : _ -> return $ Just file
 
 environmentFromFile :: String -> IO Environment
 environmentFromFile filename = do
