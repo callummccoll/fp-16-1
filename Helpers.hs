@@ -3,6 +3,14 @@ module Helpers where
 import "gtk3" Graphics.UI.Gtk
 import Data.IORef
 
+infixl 2 >|
+(>|) :: (ContainerClass c, WidgetClass w) => w -> c -> IO ()
+widget >| container = containerAdd container widget
+
+infixl 2 >>|
+(>>|) :: (ContainerClass c, WidgetClass w) => IO w -> c -> IO ()
+widget >>| container = widget >>= (containerAdd container)
+
 changeWithPredicate :: (a -> Bool) -> (a -> a) -> a -> a
 changeWithPredicate p f x
   | p x' = x'

@@ -64,11 +64,11 @@ createDrawing :: Window -> IORef Int -> String -> Array Int Environment -> IO ()
 createDrawing window x assembly envs = do
     hbox <- hBoxNew True 10
     env  <- currentEnvironment x envs
-    (createButtons window x assembly envs) >>= (containerAdd hbox) 
+    (createButtons window x assembly envs) >>| hbox 
     --(createFrame $ Just "C") >>= (containerAdd hbox)
-    (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>= (containerAdd hbox)
-    (createRamAndRegisters env) >>= (containerAdd hbox)
-    (createIO env) >>= (containerAdd hbox)
+    (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>| hbox
+    (createRamAndRegisters env) >>| hbox
+    (createIO env) >>| hbox
     containerAdd window hbox
     widgetShowAll window
 
