@@ -5,6 +5,7 @@
 
 HC = ghc
 
+ARGS = test.ass 5
 BIN = main 
 SRCDIR = .
 ifeq ($(OS),Windows_NT)
@@ -22,7 +23,7 @@ build:
 	$(HC) --make $(HSRC) $(HCFLAGS) -hidir $(BUILDDIR) -odir $(BUILDDIR) -outputdir $(BUILDDIR) -tmpdir $(BUILDDIR) -o $(BUILDDIR)/$(BIN) 
 
 run:	build
-	$(BUILDDIR)/$(BIN) test.ass
+	$(BUILDDIR)/$(BIN) $(ARGS)
 
 clean:
 ifeq ($(OS),Windows_NT)

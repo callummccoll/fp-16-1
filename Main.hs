@@ -26,14 +26,13 @@ main = do
     -- The main window.
     window <- windowNew
     windowSetDefaultSize window 1200 800
-
-    file <- fileFromArgs 
+    (file, stdin) <- fileFromArgs 
     case file of
         Nothing    -> error "No File Specified"
         Just file' -> do
 	        -- Command for getting all environments for a prog
 	        -- envs is an IOArray for quick lookup.
-            envs <- (environmentFromFile file') >>= getFullProgEnv 
+            envs <- (environmentFromFile file' stdin) >>= getFullProgEnv 
             -- Draw the Window.
             redraw window counter envs
             -- Stop the application when the window is closed.
@@ -43,17 +42,17 @@ main = do
             -- Start the application.
             mainGUI
 
-fileFromArgs :: IO (Maybe String)
+fileFromArgs :: IO (Maybe String, [Int])
 fileFromArgs = do
     args <- getArgs
     case args of
-        [] -> return Nothing
-        file : _ -> return $ Just file
+        []            -> return (Nothing, [])
+        file : stdins -> return (Just file, (\s -> read s :: Int) <$> (stdins >>= lines))
 
-environmentFromFile :: String -> IO Environment
-environmentFromFile filename = do
+environmentFromFile :: String -> [Int] -> IO Environment
+environmentFromFile filename stdin = do
    ass <- readFile filename
-   makeEnvFromAss ass [5] --this is the stdin that needs to be linked in some way?
+   makeEnvFromAss ass stdin --this is the stdin that needs to be linked in some way?
 
 redraw :: Window -> IORef Int -> Array Int Environment -> IO ()
 redraw window num envs = do
