@@ -102,7 +102,10 @@ actionCall name env = case (vVal name) of
 					i -> error $ "Accumulator Error: " ++ getStringFromCVal i
 			"read" -> do
 				let env' = functionRead env
-				incrementPC env'
+				case eA env' of
+					Undefined -> return env'
+					Int _ -> incrementPC env'
+					Inst _ -> return env'
 			_ -> do
 				env' <- addToStack (ePC env) env
 				let addr = (getAddress n env')
