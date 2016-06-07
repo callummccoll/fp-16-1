@@ -50,20 +50,39 @@ createFrame s = case s of
         frameSetLabelAlign frame 0.5 0.5
         return frame
 
-createBox :: (Float, Float, Float, Float) -> Maybe Color -> IO Alignment
+createBox :: (Float, Float, Float, Float) -> Maybe Color -> IO EventBox
 createBox (xalign, yalign, xscale, yscale) color = do
-    box <- alignmentNew xalign yalign xscale yscale
-    case color of
-        Just color' -> do
-            widgetModifyBg box StateNormal color'
-            return box
-        Nothing     -> return box
+    alignment <- alignmentNew xalign yalign xscale yscale
+    createBoxWithChildren [alignment] color
 
-createPaddedBox :: (Int, Int, Int, Int) -> (Float, Float, Float, Float) -> Maybe Color -> IO Alignment
-createPaddedBox (top, bottom, left, right) alignment color = do
-    box <- createBox alignment color
-    alignmentSetPadding box top right bottom left
-    return box
+createPaddedBox :: (Int, Int, Int, Int) -> (Float, Float, Float, Float) -> Maybe Color -> IO EventBox
+createPaddedBox (top, bottom, left, right) (xalign, yalign, xscale, yscale) color = do
+    alignment <- (alignmentNew xalign yalign xscale yscale)
+    alignmentSetPadding alignment top right bottom left
+    createBoxWithChildren [alignment] color
+
+createBoxWithChildren :: WidgetClass w => [w] -> Maybe Color -> IO EventBox
+createBoxWithChildren children color = do
+    eventBox <- eventBoxNew
+    colorBox eventBox color
+    addToContainer eventBox children
+    return eventBox
+
+addToContainer :: (ContainerClass c, WidgetClass w) => c -> [w] -> IO ()
+addToContainer container widgets = do
+    case widgets of
+        [] -> return ()
+        w : ws -> do
+            containerAdd container w
+            addToContainer container ws
+
+colorBox :: WidgetClass w => w -> Maybe Color -> IO w
+colorBox widget color = do
+    case color of
+      Nothing     -> return widget
+      Just color' -> do
+          widgetModifyBg widget StateNormal color'
+          return widget
 
 toLines :: (Show a) => [a] -> String
 toLines xs = concat ((\x -> (show x) ++ "\n") <$> xs)
