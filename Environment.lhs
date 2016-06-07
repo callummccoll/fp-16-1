@@ -6,7 +6,7 @@ a state of the machine.
 \begin{code}
 module Environment (CVal(..), Cell(..), getStringFromCVal, 
                Environment, eA, eSP, ePC, eRAM, eStaticSize, eStdIn, 
-               eStdOut, eSymTable, initEnvF, eThawEnv, freezeEnv, 
+               eStdOut, eSymTable, initEnvF, eThawEnv, eFreezeEnv, 
                makeEnvFromAss, convertInstToString) where
 \end{code}
 
@@ -182,22 +182,24 @@ The a new environment is then returned.
 
 \begin{code}
 eThawEnv :: Environment -> IO Environment
-eThawEnv e = do
-   let Right r = eRAM e
-   r' <- thaw r
-   return $ e {eRAM = Left r'}
+eThawEnv e = case eRAM e of
+   Left _ -> error $ "Cannot thaw already thawed RAM"
+   Right r -> do
+      r' <- thaw r
+      return $ e {eRAM = Left r'}
 \end{code}
 
-\noindent \highlighttt{eThawEnv} is a method that freezes the \highlighttt{eRAM} of an 
+\noindent \highlighttt{eFreezeEnv} is a method that freezes the \highlighttt{eRAM} of an 
 Environment changing it from an \highlighttt{IOArray} to an \highlighttt{Array}. 
 The a new environment is then returned.
 
 \begin{code}
-freezeEnv :: Environment -> IO Environment
-freezeEnv e = do
-   let Left r = eRAM e
-   r' <- freeze r
-   return $ e {eRAM = Right r'}   
+eFreezeEnv :: Environment -> IO Environment
+eFreezeEnv e = case eRAM e of
+   Right _ -> error $ "Cannot freeze already frozen RAM"
+   Left r -> do
+      r' <- freeze r
+      return $ e {eRAM = Right r'} 
 \end{code}
 
 \noindent \highlighttt{makeEnvFromAss} is a method that creates and initialises an 
@@ -229,7 +231,7 @@ makeEnvFromAss source stdIn = do
 
    env'' <- loadMemory prog 0 env'
 
-   --t <- freezeEnv env''
+   --t <- eFreezeEnv env''
    --print t
 
    return env''

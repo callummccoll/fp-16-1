@@ -22,7 +22,7 @@ getFullProgEnv :: Environment -> IO (Array Int Environment)
 getFullProgEnv env = case (eRAM env) of
 	Left ram -> do
 		-- Store the initial state of the environment
-		env' <- freezeEnv env
+		env' <- eFreezeEnv env
 		-- Send it through the emulator to store all the steps.
 		envs <- getProgList env 0 [env']
 		return (listArray (0, ((length envs)-1)) envs)
@@ -35,7 +35,7 @@ getProgList env count envs = do
 	then do
 		return envs
 	else do
-		env'' <- freezeEnv env'
+		env'' <- eFreezeEnv env'
 		getProgList env' (count+1) (envs ++ [env''])
 	
 getExeStep :: Environment -> Int -> IO Environment
