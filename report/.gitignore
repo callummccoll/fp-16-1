@@ -1,0 +1,14 @@
+_minted-main/*
+*.aux
+*.pdf
+*.gz
+*.lof
+*.lot
+*.toc
+*.out
+*.log
+*.xwm
+*.xml
+*.sta
+*.bbl
+*.blg
