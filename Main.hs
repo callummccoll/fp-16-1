@@ -32,9 +32,10 @@ main = do
         Just file' -> do
 	        -- Command for getting all environments for a prog
 	        -- envs is an IOArray for quick lookup.
-            envs <- (environmentFromFile file' stdin) >>= getFullProgEnv 
+            (assembly, env) <- (environmentFromFile file' stdin)
+            envs <- env >>= getFullProgEnv 
             -- Draw the Window.
-            redraw window counter envs
+            redraw window counter assembly envs
             -- Stop the application when the window is closed.
             -- Stop the application when the window is closed.
             window `on` deleteEvent $ tryEvent $ do
@@ -49,22 +50,22 @@ fileFromArgs = do
         []            -> return (Nothing, [])
         file : stdins -> return (Just file, (\s -> read s :: Int) <$> (stdins >>= lines))
 
-environmentFromFile :: String -> [Int] -> IO Environment
+environmentFromFile :: String -> [Int] -> IO (String, IO Environment)
 environmentFromFile filename stdin = do
    ass <- readFile filename
-   makeEnvFromAss ass stdin --this is the stdin that needs to be linked in some way?
+   return (ass, makeEnvFromAss ass stdin)
 
-redraw :: Window -> IORef Int -> Array Int Environment -> IO ()
-redraw window num envs = do
+redraw :: Window -> IORef Int -> String -> Array Int Environment -> IO ()
+redraw window num assembly envs = do
     containerForeach window (\w -> containerRemove window w)
-    createDrawing window num envs
+    createDrawing window num assembly envs
 
-createDrawing :: Window -> IORef Int -> Array Int Environment -> IO ()
-createDrawing window x envs = do
+createDrawing :: Window -> IORef Int -> String -> Array Int Environment -> IO ()
+createDrawing window x assembly envs = do
     hbox <- hBoxNew True 10
     env  <- currentEnvironment x envs
-    (createButtons window x envs) >>= (containerAdd hbox) 
-    (createFrame $ Just "C") >>= (containerAdd hbox)
+    (createButtons window x assembly envs) >>= (containerAdd hbox) 
+    --(createFrame $ Just "C") >>= (containerAdd hbox)
     (createFrame $ Just "Assembly") >>= (containerAdd hbox)
     (createRamAndRegisters env) >>= (containerAdd hbox)
     (createIO env) >>= (containerAdd hbox)
@@ -76,15 +77,15 @@ currentEnvironment x envs = do
     i <- readIORef x
     return (envs ! i)
 
-createButtons :: Window -> IORef Int -> Array Int Environment -> IO VBox
-createButtons window x envs = do
+createButtons :: Window -> IORef Int -> String -> Array Int Environment -> IO VBox
+createButtons window x assembly envs = do
     vbox <- vBoxNew True 10
     (createButton (createButtonFactory "next" x)
-        (createButtonAction window x envs
+        (createButtonAction window x assembly envs
         (changeWithPredicate (< (length envs)) (+ 1))))
         >>= (containerAdd vbox)
     (createButton (createButtonFactory "previous" x)
-        (createButtonAction window x envs
+        (createButtonAction window x assembly envs
         (changeWithPredicate (>= 0) (flip (-) 1))))
         >>= (containerAdd vbox)
     return vbox
@@ -94,10 +95,10 @@ createButtonFactory name counter = (\_ -> do
     (readIORef counter) >>= (\num -> buttonNewWithLabel (name ++ " " ++ (show num)))
     )
 
-createButtonAction :: Window -> IORef Int -> Array Int Environment -> (Int -> Int) -> (() -> IO ())
-createButtonAction window counter envs f = (\_ -> do
+createButtonAction :: Window -> IORef Int -> String -> Array Int Environment -> (Int -> Int) -> (() -> IO ())
+createButtonAction window counter assembly envs f = (\_ -> do
     modifyIORef' counter f
-    redraw window counter envs
+    redraw window counter assembly envs
     )
 
 createIO :: Environment -> IO VBox
