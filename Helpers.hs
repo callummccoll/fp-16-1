@@ -9,11 +9,54 @@ widget >| container = do
     containerAdd container widget
     return container
 
+infixl 2 >|>
+(>|>) :: (ContainerClass c, WidgetClass w) => w -> IO c -> IO c
+widget >|> container = do
+    c <- container
+    containerAdd c widget
+    return c
+
 infixl 2 >>|
 (>>|) :: (ContainerClass c, WidgetClass w) => IO w -> c -> IO c
 widget >>| container = do
     widget >>= (containerAdd container)
     return container
+
+infixl 2 >>|>
+(>>|>) :: (ContainerClass c, WidgetClass w) => IO w -> IO c -> IO c
+widget >>|> container = do
+    c <- container
+    w <- widget
+    containerAdd c w
+    return c
+
+
+infixl 1 |<
+(|<) :: (ContainerClass c, WidgetClass w) => c -> w -> IO w
+container |< widget = do
+    containerAdd container widget
+    return widget
+
+infixl 1 <|<
+(<|<) :: (ContainerClass c, WidgetClass w) => IO c -> w -> IO w
+container <|< widget = do
+    c <- container
+    containerAdd c widget
+    return widget
+
+infixl 1 |<<
+(|<<) :: (ContainerClass c, WidgetClass w) => c -> IO w -> IO w
+container |<< widget = do
+    widget >>= (containerAdd container)
+    widget
+
+infixl 1 <|<<
+(<|<<) :: (ContainerClass c, WidgetClass w) => IO c -> IO w -> IO w
+container <|<< widget = do
+    c <- container
+    w <- widget
+    containerAdd c w
+    return w
 
 changeWithPredicate :: (a -> Bool) -> (a -> a) -> a -> a
 changeWithPredicate p f x

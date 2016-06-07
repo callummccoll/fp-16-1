@@ -30,12 +30,9 @@ extractCell c = case (cLabel c, cVal c) of
 
 createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
-    frame <- createFrame $ Just "Ram and Registers"
     hbox  <- hBoxNew False 10
-    (createRamTable cs) >>| hbox
-    (createRegisters registers) >>| hbox
-    hbox >| frame
-    return frame
+    (createRamTable cs) >>| hbox <|<< (createRegisters registers)
+    hbox >|> (createFrame $ Just "Ram and Registers")
 
 createRamTable :: Array Int (Maybe String, String) -> IO Table
 createRamTable cs = do
@@ -76,8 +73,7 @@ createRow (label, content) = do
     label <- labelNew (label)
     cell <- labelNew (Just content)
     label >| labelAlignment >>| labelFrame
-    cell >| contentAlignment >>| eventBox
-    eventBox >| contentFrame
+    cell >| contentAlignment >>| eventBox >>| contentFrame
     return (labelFrame, contentFrame)
 
 createRegisters :: [(String, String)] -> IO VBox
@@ -92,10 +88,9 @@ createRegister (register, content) = do
     frame    <- createFrame Nothing
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
-    (labelNew (Just content)) >>= (containerAdd eventBox)
-    containerAdd frame eventBox
-    (labelNew (Just register)) >>= (containerAdd hbox)
-    containerAdd hbox frame
+    (labelNew (Just content)) >>| eventBox >>| frame
+    (labelNew (Just register)) >>| hbox
+    frame >| hbox
     return hbox
 
 addRegisters :: VBox -> [IO HBox] -> IO VBox
@@ -103,6 +98,6 @@ addRegisters vbox registers = case registers of
     []     -> return vbox
     r : rs -> do
         register <- r
-        containerAdd vbox register
+        register >| vbox
         set vbox [boxChildPacking register := PackRepel]
         addRegisters vbox rs
