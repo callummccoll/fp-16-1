@@ -1,3 +1,5 @@
+\begin{code}
+
 ----
 -- Compiling:
 -- ghc Emulation.hs -fno-warn-tabs -i../../machine/parser
@@ -583,3 +585,5 @@ addToStack x env = do
 -- A convenience function that increments the PC.
 incrementPC :: Environment -> IO Environment
 incrementPC env = return env {ePC = (ePC env)+1}
+
+\end{code}
