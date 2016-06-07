@@ -4,12 +4,16 @@ import "gtk3" Graphics.UI.Gtk
 import Data.IORef
 
 infixl 2 >|
-(>|) :: (ContainerClass c, WidgetClass w) => w -> c -> IO ()
-widget >| container = containerAdd container widget
+(>|) :: (ContainerClass c, WidgetClass w) => w -> c -> IO c
+widget >| container = do
+    containerAdd container widget
+    return container
 
 infixl 2 >>|
-(>>|) :: (ContainerClass c, WidgetClass w) => IO w -> c -> IO ()
-widget >>| container = widget >>= (containerAdd container)
+(>>|) :: (ContainerClass c, WidgetClass w) => IO w -> c -> IO c
+widget >>| container = do
+    widget >>= (containerAdd container)
+    return container
 
 changeWithPredicate :: (a -> Bool) -> (a -> a) -> a -> a
 changeWithPredicate p f x

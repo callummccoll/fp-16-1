@@ -75,10 +75,8 @@ createRow (label, content) = do
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
     label <- labelNew (label)
     cell <- labelNew (Just content)
-    label >| labelAlignment
-    labelAlignment >| labelFrame
-    cell >| contentAlignment
-    contentAlignment >| eventBox
+    label >| labelAlignment >>| labelFrame
+    cell >| contentAlignment >>| eventBox
     eventBox >| contentFrame
     return (labelFrame, contentFrame)
 
