@@ -30,7 +30,6 @@ widget >>|>> container = do
     containerAdd c w
     return c
 
-
 infixl 1 <|<
 (<|<) :: (ContainerClass c, WidgetClass w) => c -> w -> IO w
 container <|< widget = do
@@ -57,6 +56,19 @@ container <<|<< widget = do
     w <- widget
     containerAdd c w
     return w
+
+infixl 2 >:=
+(>:=) :: o -> [AttrOp o] -> IO o
+object >:= attributes = do
+    set object attributes
+    return object
+
+infixl 2 >>:=
+(>>:=) :: IO o -> [AttrOp o] -> IO o
+object >>:= attributes = do
+    o <- object
+    set o attributes
+    return o
 
 changeWithPredicate :: (a -> Bool) -> (a -> a) -> a -> a
 changeWithPredicate p f x
@@ -85,17 +97,13 @@ createTextArea content editable = case content of
     Just s  -> do
         buffer <- textBufferNew Nothing
         textBufferSetText buffer s
-        area <- textViewNewWithBuffer buffer
-        set area [textViewEditable := editable]
+        area <- textViewNewWithBuffer buffer >>:= [textViewEditable := editable]
         textViewSetLeftMargin area 2
         textViewSetRightMargin area 2
         return area
 
 createEmptyTextArea :: Bool -> IO TextView
-createEmptyTextArea editable = do
-    area <- textViewNew
-    set area [textViewEditable := editable]
-    return area
+createEmptyTextArea editable = textViewNew >>:= [textViewEditable := editable]
 
 createFrame :: String -> IO Frame
 createFrame s = do
