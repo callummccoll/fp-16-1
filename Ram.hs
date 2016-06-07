@@ -32,9 +32,9 @@ createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
     frame <- createFrame $ Just "Ram and Registers"
     hbox  <- hBoxNew False 10
-    (createRamTable cs) >>= (containerAdd hbox)
-    (createRegisters registers) >>= (containerAdd hbox)
-    containerAdd frame hbox 
+    (createRamTable cs) >>| hbox
+    (createRegisters registers) >>| hbox
+    hbox >| frame
     return frame
 
 createRamTable :: Array Int (Maybe String, String) -> IO Table
@@ -59,8 +59,8 @@ createRowCell row = do
     frame <- createFrame Nothing
     alignment <- alignmentNew 0.5 0 1 1
     alignmentSetPadding alignment 0 0 2 2
-    (labelNew (Just (show row))) >>= (containerAdd alignment)
-    containerAdd frame alignment
+    (labelNew (Just (show row))) >>| alignment
+    alignment >| frame
     return frame
 
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
@@ -73,13 +73,13 @@ createRow (label, content) = do
     alignmentSetPadding contentAlignment 5 5 5 5
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
-    label' <- labelNew (label)
+    label <- labelNew (label)
     cell <- labelNew (Just content)
-    containerAdd labelAlignment label'
-    containerAdd labelFrame labelAlignment
-    containerAdd contentAlignment cell 
-    containerAdd eventBox contentAlignment
-    containerAdd contentFrame eventBox
+    label >| labelAlignment
+    labelAlignment >| labelFrame
+    cell >| contentAlignment
+    contentAlignment >| eventBox
+    eventBox >| contentFrame
     return (labelFrame, contentFrame)
 
 createRegisters :: [(String, String)] -> IO VBox
