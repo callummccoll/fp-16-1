@@ -13,7 +13,7 @@ BUILDDIR = $(SRCDIR)\build
 else
 BUILDDIR = $(SRCDIR)/build
 endif
-HSRC = Emulation.lhs Environment.lhs Helpers.hs Main.hs Presentation.hs Ram.hs
+HSRC = $(wildcard *.lhs) $(wildcard *.hs)
 HCFLAGS = -fno-warn-tabs -i../machine/parser -XPackageImports
 
 all:	clean run
