@@ -7,7 +7,11 @@ HC = ghc
 
 BIN = main 
 SRCDIR = .
+ifeq ($(OS),Windows_NT)
 BUILDDIR = $(SRCDIR)\build
+else
+BUILDDIR = $(SRCDIR)/build
+endif
 HSRC = Emulation.hs Environment.lhs Helpers.hs Main.hs Presentation.hs Ram.hs
 HCFLAGS = -fno-warn-tabs -i../machine/parser -XPackageImports
 
