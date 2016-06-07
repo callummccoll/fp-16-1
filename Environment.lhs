@@ -144,21 +144,19 @@ each cell is shown on a seperate line using the show instances for
 
 \begin{code}
 instance Show Environment where
-  showsPrec _ e = 
-   let 
-      Right r = eRAM e
-   in 
-      showString "ENVIRONMENT [" .
-      showString "\n   A = " . shows (eA e) .
-      showString "\n   SP = " . shows (eSP e) .
-      showString "\n   PC = " . shows (ePC e) .
-      showString "\n   StdIn = " . shows (eStdIn e) .
-      showString "\n   StdOut = " . shows (eStdOut e) .
-      showString "\n   SstaticSize = " . shows (eStaticSize e) .
-      showString "\n   RAM = " . (showString 
-         (concat (intersperse "\n         " (map show (elems r))))) .
-      showString "\n   Symbols = " . shows (eSymTable e) .
-      showString "\n]\n" 
+   showsPrec _ e = case eRAM e of
+      Left _ -> error $ "Cannot show thawed RAM." 
+      Right r -> showString "ENVIRONMENT [" .
+         showString "\n   A = " . shows (eA e) .
+         showString "\n   SP = " . shows (eSP e) .
+         showString "\n   PC = " . shows (ePC e) .
+         showString "\n   StdIn = " . shows (eStdIn e) .
+         showString "\n   StdOut = " . shows (eStdOut e) .
+         showString "\n   SstaticSize = " . shows (eStaticSize e) .
+         showString "\n   RAM = " . (showString 
+            (concat (intersperse "\n         " (map show (elems r))))) .
+         showString "\n   Symbols = " . shows (eSymTable e) .
+         showString "\n]\n" 
 \end{code}
 
 \noindent \highlighttt{initEnvF} is a method that creates an empty Enviroment with all 
