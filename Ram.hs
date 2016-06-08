@@ -71,7 +71,7 @@ createRow (label, content) = do
 
 createRegisters :: [(String, String)] -> IO VBox
 createRegisters registers = do
-    vbox  <- vBoxNew True 10
+    vbox  <- vBoxNew False 10
     addRegisters vbox (createRegister <$> registers)
 
 
@@ -84,13 +84,11 @@ createRegister (register, content) = do
     (labelNew (Just content)) >>|> eventBox >>|> frame
     (labelNew (Just register)) >>|> hbox
     frame >|> hbox
-    return hbox
 
 addRegisters :: VBox -> [IO HBox] -> IO VBox
 addRegisters vbox registers = case registers of
     []     -> return vbox
     r : rs -> do
         register <- r
-        register >|> vbox
-        vbox >:= [boxChildPacking register := PackRepel]
+        boxPackStart vbox register PackNatural 0
         addRegisters vbox rs
