@@ -89,7 +89,7 @@ createTextAreaFrame title content editable = do
     frame <- case title of
                Nothing -> frameNew
                Just s  -> createFrame s
-    (createTextArea content editable) >>|> frame
+    (createTextArea content editable) >>|>> (pad (5, 5, 5, 5)) >>|> frame
 
 createTextArea :: Maybe String -> Bool -> IO TextView
 createTextArea content editable = case content of
@@ -98,8 +98,8 @@ createTextArea content editable = case content of
         buffer <- textBufferNew Nothing
         textBufferSetText buffer s
         area <- textViewNewWithBuffer buffer >>:= [textViewEditable := editable]
-        textViewSetLeftMargin area 2
-        textViewSetRightMargin area 2
+        textViewSetLeftMargin area 5
+        textViewSetRightMargin area 5
         return area
 
 createEmptyTextArea :: Bool -> IO TextView
