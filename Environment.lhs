@@ -256,27 +256,17 @@ parseAss source = do
             return program   
 \end{code}
 
-\noindent \highlighttt{loadMemory} is a recursive function that takes in a 
-parse tree, cell index and enviroment and loads the program into RAM. Each 
-\highlighttt{Declaration} in the \highlighttt{Program} is read and an action is 
-taken depending on what it is:
+\noindent \highlighttt{loadMemory} is a recursive function that takes in a parse tree, cell index and enviroment and loads the program into RAM. Each \highlighttt{Declaration} in the \highlighttt{Program} is read and an action is taken depending on what it is:
 
 \begin{itemize}
-   \item LabelHere: The current cell is given the label of the LabelHere. Since 
-the LabelHere always comes before the value of the cell is set, the cell value 
-is set to \highlighttt{Undefined}.
-   \item LabelBind: These only apply to the SymbolTable, therefore no action is 
-taken.
-   \item Allocation: The cell index is increased by however many allocations are 
-made. All allocated cells have a value of \highlighttt{Undefined}.
-   \item Instruction: The instruction is stored in the cell and the cell index 
-is incremented by one.
-   \item Value: The value is stored in the current cell and the cell index is 
-incremented by one.
+   \item LabelHere: The current cell is given the label of the LabelHere. Since the LabelHere always comes before the value of the cell is set, the cell value is set to \highlighttt{Undefined}.
+   \item LabelBind: These only apply to the SymbolTable, therefore no action is taken.
+   \item Allocation: The cell index is increased by however many allocations are made. All allocated cells have a value of \highlighttt{Undefined}.
+   \item Instruction: The instruction is stored in the cell and the cell index is incremented by one.
+   \item Value: The value is stored in the current cell and the cell index is incremented by one.
 \end{itemize}
 
-\noindent After each action, \highlighttt{loadMemory} is called again without the 
-declaration that was just read until there are not declarations left in the 
+\noindent After each action, \highlighttt{loadMemory} is called again without the declaration that was just read until there are not declarations left in the 
 program.
 
 \begin{code}
