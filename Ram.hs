@@ -32,7 +32,7 @@ createRam :: Array Int (Maybe String, String) -> [(String, String)] -> IO Frame
 createRam cs registers = do
     hbox  <- hBoxNew False 10
     (createRamTable cs) >>|> hbox <<|<< (createRegisters registers)
-    hbox >|>> (createFrame "Ram and Registers")
+    hbox >|>> (pad (5,5,5,5)) >>|>> (createFrame "Ram and Registers")
 
 createRamTable :: Array Int (Maybe String, String) -> IO Table
 createRamTable cs = do
