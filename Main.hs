@@ -86,9 +86,11 @@ createMenu window x assembly envs = do
     fileMenu <- menuNew
     file <- menuItemNewWithLabel "File"
     open <- menuItemNewWithLabel "Open..."
+    separator <- separatorMenuItemNew
     exit <- menuItemNewWithLabel "Exit"
     menuItemSetSubmenu file fileMenu
     menuShellAppend fileMenu open
+    menuShellAppend fileMenu separator
     menuShellAppend fileMenu exit
     menuShellAppend menubar file
     exit `on` menuItemActivate $ do
