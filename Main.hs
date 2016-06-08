@@ -62,6 +62,7 @@ redraw window num assembly envs = do
 
 createDrawing :: Window -> IORef Int -> String -> Array Int Environment -> IO ()
 createDrawing window x assembly envs = do
+    vbox <- vBoxNew False 10
     hbox <- hBoxNew True 10
     env  <- currentEnvironment x envs
     (createButtons window x assembly envs) >>|> hbox 
@@ -69,13 +70,30 @@ createDrawing window x assembly envs = do
     (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>|> hbox
     (createRamAndRegisters env) >>|> hbox
     (createIO env) >>|> hbox
-    hbox >|> window
+    menubar <- (createMenu window x assembly envs)
+    boxPackStart vbox menubar PackNatural 5
+    hbox >|> vbox >>|> window
     widgetShowAll window
 
 currentEnvironment :: IORef Int -> Array Int Environment -> IO Environment
 currentEnvironment x envs = do
     i <- readIORef x
     return (envs ! i)
+
+createMenu :: Window -> IORef Int -> String -> Array Int Environment -> IO MenuBar
+createMenu window x assembly envs = do
+    menubar <- menuBarNew
+    fileMenu <- menuNew
+    file <- menuItemNewWithLabel "File"
+    open <- menuItemNewWithLabel "Open..."
+    exit <- menuItemNewWithLabel "Exit"
+    menuItemSetSubmenu file fileMenu
+    menuShellAppend fileMenu open
+    menuShellAppend fileMenu exit
+    menuShellAppend menubar file
+    exit `on` menuItemActivate $ do
+        liftIO $ mainQuit
+    return menubar
 
 createButtons :: Window -> IORef Int -> String -> Array Int Environment -> IO VBox
 createButtons window x assembly envs = do
