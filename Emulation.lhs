@@ -1,3 +1,4 @@
+\ignore{
 \begin{code}
 ----
 -- Compiling:
@@ -5,7 +6,13 @@
 
 -- Windows
 -- Emulation.exe < test.ass
+\end{code}
+}
 
+\noindent This is the \highlighttt{Emulation} module used by the GUI in order to 
+execute an assembly program.
+
+\begin{code}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Emulation where
@@ -15,13 +22,19 @@ import Data.Array
 import Data.Array.IO
 import Environment
 import SymbolTable
-import System.IO
 
 import Assembly
-
 \end{code}
-\begin{code}
 
+\subsubsection{Emulation Functions}
+\highlighttt{getFullProgEnv} is the highlest level function of the emulator that 
+builds a complete listing of environment states for a program. This is used by 
+the GUI in order to emulate a program. It takes in the starting environment and 
+then sends it to the recursive function \highlighttt{getProgList} to be stepped 
+through. Once the entire program has been emulated, the list of environments is 
+converted an \highlighttt{Array} and returned.
+
+\begin{code}
 getFullProgEnv :: Environment -> IO (Array Int Environment)
 getFullProgEnv env = case (eRAM env) of
    Left ram -> do
@@ -33,17 +46,29 @@ getFullProgEnv env = case (eRAM env) of
    Right r -> error $ "Cannot Emulate with frozen RAM"
 \end{code}
 
+\noindent \highlighttt{getProgList} is the connected function to \highlighttt{getFullProgEnv}. 
+Each time it recurs on itself, it executes another instruction from the assembly 
+program. After executing a step, a copy of the new environment is frozen and 
+stored at the end of a list, and the environment is fed back into this function 
+again. The environment contains a propery called eComplete which is set to 
+\highlighttt{True} when the HALT instruction is called, or the program attempts 
+to read input when there is none left. 
+
 \begin{code}
 getProgList :: Environment -> Int -> [Environment] -> IO [Environment]
 getProgList env count envs = do
    env' <- getExeStep env 1
-   if (ePC env') == (ePC env)
+   if (eComplete env') == True
    then do
       return envs
    else do
       env'' <- eFreezeEnv env'
       getProgList env' (count+1) (envs ++ [env''])
 \end{code}
+
+\noindent \highlighttt{getExeStep} is the second function for emulating an 
+assembly program, given an nvironment and a number of steps, it will emulate 
+that many steps and return the resulting environment.
 
 \begin{code}
 getExeStep :: Environment -> Int -> IO Environment
@@ -54,20 +79,31 @@ getExeStep env steps = case steps of
       getExeStep env' (steps-1)            
 \end{code}
 
+\noindent \highlighttt{doExecutionStep} is a function that reads an instruction 
+from RAM based on the PC, then sends it to be executed. Some error checking 
+happens at this point, first we make sure the eRAM is a mutable array, then 
+we check that what we pull out of memory is actually an instruction. If either 
+of those happen, we crash with an appropriate error message.
+
 \begin{code}
 doExecutionStep :: Environment -> IO Environment
 doExecutionStep env = case (eRAM env) of 
    Left ram -> do
       cell <- readArray ram (ePC env)
       case (cVal cell) of
-         Int i -> error $ "Memory Error: " ++ show i
-         Inst i -> do
-            --putStr (getStringFromCVal (cVal cell) ++ "\n")
-            --putStr (show inst ++ "\n")
-            readInstruction i env
-         _ -> error $ "Memory Error: Undefined"
+         Inst i -> readInstruction i env
+         Int i -> error $ "Memory Error: " ++ (show i) ++ " is not an Instruction. " ++ 
+		                     "Memory[" ++ (show (ePC env)) ++ "]"
+         _ -> error $ "Memory Error: Undefined is not an Instruction. " ++ 
+		                 "Memory[" ++ (show (ePC env)) ++ "]"
    Right ran -> error $ "Cannot Emulate with frozen RAM"
 \end{code}
+
+\noindent \highlighttt{readInstruction} is a simple function that breaks an 
+\highlighttt{Instruction} appart and executes its connected action. Each 
+instruction takes a certain number of paramters along with the environment, once 
+executed, the new environment is then returned, and readInstruction also returns 
+that environment.
 
 \begin{code}
 readInstruction :: Instruction -> Environment -> IO Environment
@@ -87,13 +123,15 @@ readInstruction inst env = case inst of
       BLE _ v -> actionBLE v env
       BGE _ v -> actionBGE v env
       RET _ -> actionReturn env
-      HALT _ -> return (actionHalt env)
+      HALT _ -> actionHalt env
 \end{code}
+
+\subsubsection{Actions}
 
 \begin{code}
 -- HALT: Halting simply returns the same machine. No action is taken.
-actionHalt :: Environment -> Environment
-actionHalt machine = machine
+actionHalt :: Environment -> IO Environment
+actionHalt env = return (env {eComplete = True})
 \end{code}
 
 \begin{code}
@@ -113,9 +151,9 @@ actionCall name env = case (vVal name) of
          "read" -> do
             let env' = functionRead env
             case eA env' of
-               Undefined -> return env'
+               Undefined -> return (env' {eComplete = True})
                Int _ -> incrementPC env'
-               Inst _ -> return env'
+               Inst _ -> return (env' {eComplete = True})
          _ -> do
             env' <- addToStack (ePC env) env
             let addr = (getAddress n env')
@@ -366,8 +404,9 @@ functionRead env = let
       (x:xs) -> env {eA = (Int x)}
 \end{code}
 
+\subsubsection{Memory Manipulation}
+
 \begin{code}
------------------------------------------------------------
 setDestValue :: Dest -> Int -> Environment -> IO Environment
 setDestValue dest srcValue env = case dest of
    DRegister _ r -> case (rVal r) of 
@@ -642,6 +681,8 @@ getAddress lbl env = let
          _ -> -1   --should never happen if Symbol is built.
       Nothing -> read lbl
 \end{code}
+
+\subsubsection{Utility Functions}
 
 \begin{code}
 -- A convenience function that puts an Int onto the stack and decrements the SP

@@ -1,21 +1,18 @@
-
-
-\noindent This is the \highlighttt{Environment} module used by the emulator and GUI that is used to store 
-a state of the machine.
+\noindent This is the \highlighttt{Environment} module used by the emulator and 
+GUI that is used to store a state of the machine.
 
 \begin{code}
 module Environment (CVal(..), Cell(..), getStringFromCVal, 
-               Environment, eA, eSP, ePC, eRAM, eStaticSize, eStdIn, 
-               eStdOut, eSymTable, initEnvF, eThawEnv, eFreezeEnv, 
+               Environment(..), initEnvF, eThawEnv, eFreezeEnv, 
                makeEnvFromAss, convertInstToString) where
 \end{code}
 
 \subsubsection{Dependencies}
 
-\noindent As a module that sits between the emulator and GUI, it has a few dependancies. 
-From outside the project it relies on IOArray and Array in order to store memory 
-data. From within this project it relies on the Assember, Symbol Table and the 
-ABR Parser modules.
+\noindent As a module that sits between the emulator and GUI, it has a few 
+dependancies. From outside the project it relies on IOArray and Array in order 
+to store memory data. From within this project it relies on the Assember, Symbol 
+Table and the ABR Parser modules.
 
 \begin{code}
 import Data.Array
@@ -70,7 +67,7 @@ instance Show CVal where
       Inst i -> showString "Inst " . showString (convertInstToString i)
 \end{code}
 
-\noindent The \highlighttt{getStringFromCVal} method returns a String based on 
+\noindent The \highlighttt{getStringFromCVal} function returns a String based on 
 the value of a CVal. This is used by the GUI in order to display the value of 
 memory cells.
 
@@ -120,6 +117,8 @@ from stdin.
 to stdout.
    \item an \highlighttt{eSymTable} (SymbolTable) : The symbol table. See the 
 SymbolTable module for more information.
+   \item an \highlighttt{eComplete} (Bool) : A flag that is set to true if the 
+enviornment has been emulated to completion.
 \end{itemize}
 
 \begin{code}
@@ -132,7 +131,8 @@ data Environment = Environment {
       eStaticSize :: Int, 
       eStdIn :: [Int],
       eStdOut :: [Int],
-      eSymTable :: SymbolTable
+      eSymTable :: SymbolTable,
+	  eComplete :: Bool
    }
 \end{code}
 
@@ -159,7 +159,7 @@ instance Show Environment where
          showString "\n]\n" 
 \end{code}
 
-\noindent \highlighttt{initEnvF} is a method that creates an empty Enviroment with all 
+\noindent \highlighttt{initEnvF} is a function that creates an empty Enviroment with all 
 properties set to default values.
 
 \begin{code}
@@ -172,11 +172,12 @@ initEnvF = Environment {
       eStaticSize = 0,
       eStdIn = [],
       eStdOut = [],
-      eSymTable = emptyST
+      eSymTable = emptyST,
+	  eComplete = False
    }
 \end{code}
 
-\noindent \highlighttt{eThawEnv} is a method that thaws the \highlighttt{eRAM} of an 
+\noindent \highlighttt{eThawEnv} is a function that thaws the \highlighttt{eRAM} of an 
 Environment changing it from an \highlighttt{Array} to an \highlighttt{IOArray}. 
 The a new environment is then returned.
 
@@ -189,7 +190,7 @@ eThawEnv e = case eRAM e of
       return $ e {eRAM = Left r'}
 \end{code}
 
-\noindent \highlighttt{eFreezeEnv} is a method that freezes the \highlighttt{eRAM} of an 
+\noindent \highlighttt{eFreezeEnv} is a function that freezes the \highlighttt{eRAM} of an 
 Environment changing it from an \highlighttt{IOArray} to an \highlighttt{Array}. 
 The a new environment is then returned.
 
@@ -202,7 +203,7 @@ eFreezeEnv e = case eRAM e of
       return $ e {eRAM = Right r'} 
 \end{code}
 
-\noindent \highlighttt{makeEnvFromAss} is a method that creates and initialises an 
+\noindent \highlighttt{makeEnvFromAss} is a function that creates and initialises an 
 enviroment based on the contents of an assembly program and some inputs. The 
 content of the program is provided by a String (this is the contents, not a 
 filename), which is then parsed using the \highlighttt{Assembly} module. Once a 
@@ -237,7 +238,7 @@ makeEnvFromAss source stdIn = do
    return env''
 \end{code}
 
-\noindent \highlighttt{parseAss} is a method that interacts with the 
+\noindent \highlighttt{parseAss} is a function that interacts with the 
 \highlighttt{Assembly} module to create a parse tree from a string.
 
 \begin{code}
@@ -255,7 +256,7 @@ parseAss source = do
             return program   
 \end{code}
 
-\noindent \highlighttt{loadMemory} is a recursive method that takes in a 
+\noindent \highlighttt{loadMemory} is a recursive function that takes in a 
 parse tree, cell index and enviroment and loads the program into RAM. Each 
 \highlighttt{Declaration} in the \highlighttt{Program} is read and an action is 
 taken depending on what it is:
@@ -311,10 +312,10 @@ loadMemory (Program ds) index env = case ds of
             Left iden -> error $ "Symbol Table Not Resolved"
 \end{code}
 
-\noindent \highlighttt{loadMemory} is a method used by \highlighttt{loadMemory} 
+\noindent \highlighttt{loadMemory} is a function used by \highlighttt{loadMemory} 
 to step through a number of cell spaces, setting each to Undefined. An int 
 for the current index, an int for the number of cells left to fill and the 
-environment are provided and this method loops until the count reaches zero.
+environment are provided and this function loops until the count reaches zero.
 
 \begin{code}
 loadAlloc :: Int -> Int-> Environment -> IO Environment
@@ -329,7 +330,7 @@ loadAlloc index count env = let
 \end{code}
 
 \subsubsection{Utility}
-In order for the \highlighttt{getStringFromCVal} method to work, there are a 
+In order for the \highlighttt{getStringFromCVal} function to work, there are a 
 number of connected string conversion functions that convert data types from 
 the assembly parse tree back to displayable strings.
 
