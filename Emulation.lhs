@@ -723,6 +723,8 @@ getSourceValue src env = case (sVal src) of
       Right ui -> return (env, uiVal ui)
 \end{code}
 
+\noindent \highlighttt{setIDestValue} is a function that takes an address (Int) and an Environment and gives back an IO Int. The address is a location in memory which has its value read and returned. This function is used by \highlighttt{getSourceValue} to read values from memory. If the memory read is Undefined or an Instruction, and error occurs instead, as this means something has gone wrong in the program.
+
 \begin{code}
 getIDestValue :: Int -> Environment -> IO Int
 getIDestValue addr env = let
@@ -736,6 +738,8 @@ getIDestValue addr env = let
 
 \subsubsection{Utility Functions}
 
+\highlighttt{getAddress} is a function used for getting the address stored with a symbol. It takes in a String, which is the identifier of the symbol, and an environment, and returns an integer. If the indentifier is not in the symbol table, the string is parsed as an Int and returned. If the symbol is in the table, but does not have a value, then -1 is returned, this should never happen unless the symbol table has been generated wrong, and -1 will then stop the emulation with an error.
+
 \begin{code}
 getAddress :: String -> Environment -> Int
 getAddress lbl env = let
@@ -743,9 +747,11 @@ getAddress lbl env = let
    in case sym of
       Just s -> case stValue s of
          Known i -> i
-         _ -> -1   --should never happen if Symbol is built.
+         _ -> -1   --should never happen if Symbol Table is built.
       Nothing -> read lbl
 \end{code}
+
+\highlighttt{addToStack} is a function used to place values onto the stack. Since multiple actions can place values on the stack, this was written to avoid code duplication. It takes an Int value to be added to the stack, and the environment, then returns the modified environment.
 
 \begin{code}
 -- A convenience function that puts an Int onto the stack and decrements the SP
@@ -755,6 +761,8 @@ addToStack x env = do
    let d = DIndirect (0,0) (Location (0,0) (Left (Register (0,0) "SP")))
    setDestValue d x env'
 \end{code}
+
+\highlighttt{addToStack} is a function used to increment the PC of an environment. Since nearly all actions need to increment the PC after being executed, this was written to avoid code duplication.
 
 \begin{code}
 -- A convenience function that increments the PC.
