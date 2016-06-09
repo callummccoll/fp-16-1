@@ -93,6 +93,21 @@ createMenu window x assembly envs = do
     menuShellAppend fileMenu separator
     menuShellAppend fileMenu exit
     menuShellAppend menubar file
+    open `on` menuItemActivate $ do
+        dialog <- fileChooserDialogNew
+            (Just "Choose Assmebly File")
+            (Just window)
+            FileChooserActionOpen
+            [("Select", ResponseAccept), ("Cancel", ResponseCancel)]
+        widgetShow dialog
+        response <- dialogRun dialog
+        case response of
+            ResponseAccept -> do
+                Just fileName <- fileChooserGetFilename dialog
+                putStrLn $ "you selected the file " ++ show fileName
+                widgetDestroy dialog
+            _ -> widgetDestroy dialog
+        return ()
     exit `on` menuItemActivate $ do
         liftIO $ mainQuit
     return menubar
