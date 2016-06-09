@@ -40,11 +40,11 @@ main = do
             boxPackStart vbox menubar PackNatural 5
             content >|> vbox >>|> window
             -- Draw the Window.
-            redraw window content counter assembly envs
-            -- Stop the application when the window is closed.
+            redraw content counter assembly envs
             -- Stop the application when the window is closed.
             window `on` deleteEvent $ tryEvent $ do
                 liftIO $ mainQuit
+            -- Show the window
             widgetShowAll window
             -- Start the application.
             mainGUI
@@ -61,16 +61,16 @@ environmentFromFile filename stdin = do
    ass <- readFile filename
    return (ass, makeEnvFromAss ass stdin)
 
-redraw :: (ContainerClass c) => Window -> c -> IORef Int -> String -> Array Int Environment -> IO ()
-redraw window container num assembly envs = do
+redraw :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> IO ()
+redraw container num assembly envs = do
     containerForeach container (\w -> containerRemove container w)
-    createDrawing window container num assembly envs
+    createDrawing container num assembly envs
 
-createDrawing :: (ContainerClass c) => Window -> c -> IORef Int -> String -> Array Int Environment -> IO ()
-createDrawing window container counter assembly envs = do
+createDrawing :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> IO ()
+createDrawing container counter assembly envs = do
     hbox <- hBoxNew True 10
     env  <- currentEnvironment counter envs
-    (createButtons window container counter assembly envs) >>|> hbox 
+    (createButtons container counter assembly envs) >>|> hbox 
     --(createFrame $ "C") >>= (containerAdd hbox)
     (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>|> hbox
     (createRamAndRegisters env) >>|> hbox
@@ -112,22 +112,22 @@ createMenu window container counter  = do
                 envs <- env >>= getFullProgEnv 
                 modifyIORef' counter (\_ -> 0)
                 -- Draw the Window.
-                redraw window container counter assembly envs
+                redraw container counter assembly envs
             _ -> widgetDestroy dialog
         return ()
     exit `on` menuItemActivate $ do
         liftIO $ mainQuit
     return menubar
 
-createButtons :: (ContainerClass c) => Window -> c -> IORef Int -> String -> Array Int Environment -> IO VBox
-createButtons window container x assembly envs = do
+createButtons :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> IO VBox
+createButtons container x assembly envs = do
     vbox <- vBoxNew True 10
     (createButton (createButtonFactory "next" x)
-        (createButtonAction window container x assembly envs
+        (createButtonAction container x assembly envs
         (changeWithPredicate (< (length envs)) (+ 1))))
         >>|> vbox
     (createButton (createButtonFactory "previous" x)
-        (createButtonAction window container x assembly envs
+        (createButtonAction container x assembly envs
         (changeWithPredicate (>= 0) (flip (-) 1))))
         >>|> vbox
     return vbox
@@ -137,10 +137,10 @@ createButtonFactory name counter = (\_ -> do
     (readIORef counter) >>= (\num -> buttonNewWithLabel (name ++ " " ++ (show num)))
     )
 
-createButtonAction :: (ContainerClass c) => Window -> c -> IORef Int -> String -> Array Int Environment -> (Int -> Int) -> (() -> IO ())
-createButtonAction window container counter assembly envs f = (\_ -> do
+createButtonAction :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> (Int -> Int) -> (() -> IO ())
+createButtonAction container counter assembly envs f = (\_ -> do
     modifyIORef' counter f
-    redraw window container counter assembly envs
+    redraw container counter assembly envs
     )
 
 createIO :: Environment -> IO VBox
