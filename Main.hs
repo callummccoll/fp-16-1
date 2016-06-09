@@ -152,6 +152,12 @@ createToolbar container counter assembly envs running assemblySource stdinSource
                 envs' <- (makeEnvFromAss assembly' stdin) >>= getFullProgEnv 
                 resetCounter counter
                 redraw container counter assembly' envs' True
+    onToolButtonClicked stopStock $ do
+        case running of
+            False -> return ()
+            True -> do
+                resetCounter counter
+                redraw container counter assembly envs False
     return bar
 
 resetCounter :: IORef Int -> IO ()
