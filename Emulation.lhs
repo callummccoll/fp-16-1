@@ -424,7 +424,7 @@ functionRead env = let
       stdIn = (eStdIn env)
    in case stdIn of
       [] -> env {eA = Undefined}
-      (x:xs) -> env {eA = (Int x)}
+      (x:xs) -> env {eA = (Int x), eStdIn = xs}
 \end{code}
 
 \subsubsection{Memory Manipulation}
