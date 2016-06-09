@@ -68,6 +68,7 @@ redraw container num assembly envs running = do
 
 createDrawing :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO ()
 createDrawing container counter assembly envs running = do
+    vbox <- vBoxNew False 0
     hbox <- hBoxNew True 10
     env  <- currentEnvironment counter envs
     (createButtons container counter assembly envs running) >>|> hbox 
@@ -75,7 +76,8 @@ createDrawing container counter assembly envs running = do
     (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>|> hbox
     (createRamAndRegisters env) >>|> hbox
     (createIO env running) >>|> hbox
-    hbox >|> container
+    (createToolbar container counter assembly envs running) >>|> vbox
+    hbox >|> vbox >>|> container
     widgetShowAll container
 
 currentEnvironment :: IORef Int -> Array Int Environment -> IO Environment
@@ -118,6 +120,19 @@ createMenu window container counter running = do
     exit `on` menuItemActivate $ do
         liftIO $ mainQuit
     return menubar
+
+createToolbar :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO Toolbar
+createToolbar container counter assembly envs running = do
+    bar <- toolbarNew
+    playStock <- toolButtonNewFromStock stockMediaPlay
+    stopStock <- toolButtonNewFromStock stockMediaStop
+    backStock <- toolButtonNewFromStock stockGoBack
+    forwardStock <- toolButtonNewFromStock stockGoForward
+    play <- toolbarInsert bar playStock 0
+    stop <- toolbarInsert bar stopStock 1
+    prev <- toolbarInsert bar backStock 2
+    next <- toolbarInsert bar forwardStock 3
+    return bar
 
 createButtons :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO VBox
 createButtons container x assembly envs running = do
