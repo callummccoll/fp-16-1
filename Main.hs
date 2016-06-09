@@ -214,7 +214,7 @@ createIO env running = do
     vbox   <- vBoxNew True 10
     stdin <- (createTextArea (Just (toLines $ eStdIn env)) (running == False)) 
     stdin >|>> (createFrame "Stdin") >>|> vbox
-    (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) (running == False)) >>|> vbox
+    (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) False) >>|> vbox
     return (vbox, getTextViewsText stdin)
 
 getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
