@@ -123,15 +123,21 @@ createMenu window container counter running = do
 
 createToolbar :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO Toolbar
 createToolbar container counter assembly envs running = do
+    counter' <- (readIORef counter) >>= (\num -> return (show num))
     bar <- toolbarNew
     playStock <- toolButtonNewFromStock stockMediaPlay
     stopStock <- toolButtonNewFromStock stockMediaStop
     backStock <- toolButtonNewFromStock stockGoBack
     forwardStock <- toolButtonNewFromStock stockGoForward
+    counterEntry <- entryNew
+    entrySetText counterEntry counter'
+    entrySetWidthChars counterEntry (length counter')
+    counterButton <- toolButtonNew (Just counterEntry) (Nothing :: Maybe String)
     play <- toolbarInsert bar playStock 0
     stop <- toolbarInsert bar stopStock 1
     prev <- toolbarInsert bar backStock 2
-    next <- toolbarInsert bar forwardStock 3
+    counter <- toolbarInsert bar counterButton 3
+    next <- toolbarInsert bar forwardStock 4
     return bar
 
 createButtons :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO VBox
