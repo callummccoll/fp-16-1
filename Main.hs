@@ -70,7 +70,7 @@ createDrawing window x assembly envs = do
     (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>|> hbox
     (createRamAndRegisters env) >>|> hbox
     (createIO env) >>|> hbox
-    menubar <- (createMenu window x assembly envs)
+    menubar <- createMenu window x
     boxPackStart vbox menubar PackNatural 5
     hbox >|> vbox >>|> window
     widgetShowAll window
@@ -80,8 +80,8 @@ currentEnvironment x envs = do
     i <- readIORef x
     return (envs ! i)
 
-createMenu :: Window -> IORef Int -> String -> Array Int Environment -> IO MenuBar
-createMenu window x assembly envs = do
+createMenu :: Window -> IORef Int -> IO MenuBar
+createMenu window counter  = do
     menubar <- menuBarNew
     fileMenu <- menuNew
     file <- menuItemNewWithLabel "File"
@@ -106,6 +106,11 @@ createMenu window x assembly envs = do
                 Just fileName <- fileChooserGetFilename dialog
                 putStrLn $ "you selected the file " ++ show fileName
                 widgetDestroy dialog
+                (assembly, env) <- (environmentFromFile fileName [])
+                envs <- env >>= getFullProgEnv 
+                modifyIORef' counter (\_ -> 0)
+                -- Draw the Window.
+                redraw window counter assembly envs
             _ -> widgetDestroy dialog
         return ()
     exit `on` menuItemActivate $ do
