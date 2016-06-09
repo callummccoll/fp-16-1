@@ -27,27 +27,27 @@ main = do
     window <- windowNew
     windowSetDefaultSize window 1200 800
     (file, stdin) <- fileFromArgs 
-    case file of
-        Nothing    -> error "No File Specified"
+    (assembly, envs) <- case file of
+        Nothing    -> return ("", listArray (0, 0) [initEnvF]) 
         Just file' -> do
-	        -- Command for getting all environments for a prog
-	        -- envs is an IOArray for quick lookup.
             (assembly, env) <- (environmentFromFile file' stdin)
             envs <- env >>= getFullProgEnv 
-            vbox <- vBoxNew False 10
-            content <- vBoxNew False 0
-            menubar <- createMenu window content counter
-            boxPackStart vbox menubar PackNatural 5
-            content >|> vbox >>|> window
-            -- Draw the Window.
-            redraw content counter assembly envs
-            -- Stop the application when the window is closed.
-            window `on` deleteEvent $ tryEvent $ do
-                liftIO $ mainQuit
-            -- Show the window
-            widgetShowAll window
-            -- Start the application.
-            mainGUI
+            return (assembly, envs)
+    -- Create the container and layout of the menu.
+    vbox <- vBoxNew False 10
+    content <- vBoxNew False 0
+    menubar <- createMenu window content counter
+    boxPackStart vbox menubar PackNatural 5
+    content >|> vbox >>|> window
+    -- Draw the Window.
+    redraw content counter assembly envs
+    -- Stop the application when the window is closed.
+    window `on` deleteEvent $ tryEvent $ do
+        liftIO $ mainQuit
+    -- Show the window
+    widgetShowAll window
+    -- Start the application.
+    mainGUI
 
 fileFromArgs :: IO (Maybe String, [Int])
 fileFromArgs = do
