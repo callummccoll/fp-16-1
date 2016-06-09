@@ -52,17 +52,23 @@ attachCellsToTable table cells row
         attachCellsToTable table cells (row + 1)
 
 createRowCell :: Int -> IO Frame
-createRowCell row = (labelNew (Just (show row)))
-    >>|>> (padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1))
-    >>|>> (frameNew)
+createRowCell row = do
+    frame <- frameNew
+    widgetSetSizeRequest frame 50 20
+    (labelNew (Just (show row)))
+        >>|>> (padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1))
+        >>|> frame
 
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
 createRow (label, content) = do
+    labelFrame <- frameNew
+    widgetSetSizeRequest labelFrame 50 30
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
+    widgetSetSizeRequest eventBox 80 30
     label <- (labelNew (label))
         >>|>> (padWithAlignment (5, 5, 5, 5) (1, 0, 1, 1))
-        >>|>> (frameNew)
+        >>|> labelFrame
     content <- (labelNew (Just content))
         >>|>> (pad (5, 5, 5, 5))
         >>|> eventBox
