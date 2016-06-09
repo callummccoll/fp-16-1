@@ -51,6 +51,7 @@ getProgList env count envs = do
       return envs
    else do
       env'' <- eFreezeEnv env'
+      --print (env'')
       getProgList env' (count+1) (envs ++ [env''])
 \end{code}
 
@@ -576,7 +577,7 @@ setIDestValue addr value env = let
 First the type of source must be determined, it can be either a Value, or a Destination. In the case of a Value, the integer of that Value is simply returned, however a Destination is more compelx.
 \begin{itemize}
    \item \highlighttt{DRegister}: If its just a register with no indirection, the value can be read straight from the environment property and returned. In the case of the accumulator, if there is an Instruction or Undefined stored there, an error will be thrown.
-   \item \highlighttt{DValue}: In this case, the Value is used as an address to get an Int from memory. This Int is then returned.
+   \item \highlighttt{DValue}: In this case, the Value is used as an address to get an Int from memory. This Int is then returned. The value here should normally be a uint, as DValue should only be used by recursive calls to \highlighttt{getSourceValue} since a source already has value.
    \item \highlighttt{DIndex}: This is a source with indrection with an offset. First the offset must be determined, then this is added to the value stored in the source, which is then used as an address to find a value. The value is sent back through \highlighttt{getSourceValue} as a DValue in order to find the Int at that memery location.
    \item \highlighttt{DPostInc}: This is a source with indrection and the value in the source is incremented after the operation. First the value of the source is found, this is then used as an address and sent back through \highlighttt{getSourceValue} as a DValue. After this returns an Int, the value of source is incremented and the Int and environment is returned.
    \item \highlighttt{DPostDec}: This is a source with indrection and the value in the source is decremented after the operation. First the value of the source is found, this is then used as an address and sent back through \highlighttt{getSourceValue} as a DValue. After this returns an Int, the value of source is decremented and the Int and environment is returned.
@@ -716,7 +717,9 @@ getSourceValue src env = case (sVal src) of
                                         (Right (Uint (0,0) (snd x))))))
             getSourceValue s' (fst x)
    Right value -> case (vVal value) of 
-      Left iden -> return (env, getAddress (idName iden) env)
+      Left iden -> do
+        x <- getIDestValue (getAddress (idName iden) env) env
+        return (env, x)
       Right ui -> return (env, uiVal ui)
 \end{code}
 
