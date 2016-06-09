@@ -158,6 +158,12 @@ createToolbar container counter assembly envs running assemblySource stdinSource
             True -> do
                 resetCounter counter
                 redraw container counter assembly envs False
+    onToolButtonClicked forwardStock $ do
+        case running of
+            False -> return ()
+            True -> do
+                modifyIORef' counter (changeWithPredicate (< (length envs)) (+ 1))
+                redraw container counter assembly envs True
     return bar
 
 resetCounter :: IORef Int -> IO ()
