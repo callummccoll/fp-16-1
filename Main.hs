@@ -137,7 +137,6 @@ createToolbar container counter assembly envs running assemblySource stdinSource
     forwardStock <- toolButtonNewFromStock stockGoForward
     case running of
         True -> do
-            widgetModifyBg bar StateNormal (Color 34181 47802 30069)
             widgetSetSensitive playStock' False
         False -> do
             widgetSetSensitive stopStock False
