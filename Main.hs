@@ -56,6 +56,9 @@ fileFromArgs = do
         []            -> return (Nothing, [])
         file : stdins -> return (Just file, (\s -> read s :: Int) <$> (stdins >>= lines))
 
+strToInts :: String -> IO [Int]
+strToInts str = return ((\s -> read s :: Int) <$> (lines str))
+
 environmentFromFile :: String -> [Int] -> IO (String, IO Environment)
 environmentFromFile filename stdin = do
    ass <- readFile filename
@@ -69,14 +72,16 @@ redraw container num assembly envs running = do
 createDrawing :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO ()
 createDrawing container counter assembly envs running = do
     vbox <- vBoxNew False 0
-    hbox <- hBoxNew True 10
+    hbox <- hBoxNew False 10
     env  <- currentEnvironment counter envs
     (createButtons container counter assembly envs running) >>|> hbox 
     --(createFrame $ "C") >>= (containerAdd hbox)
-    (createTextAreaFrame (Just "Assembly") (Just (assembly)) False) >>|> hbox
+    assemblyTextView <- (createTextArea (Just assembly) (running == False)) 
+    assemblyTextView >|>> (createFrame "Assembly") >>|> hbox
     (createRamAndRegisters env) >>|> hbox
-    (createIO env running) >>|> hbox
-    (createToolbar container counter assembly envs running) >>|> vbox
+    (ioVbox, stdinTextGetter) <- createIO env running
+    ioVbox >|> hbox
+    (createToolbar container counter assembly envs running (getTextViewsText assemblyTextView) stdinTextGetter) >>|> vbox
     hbox >|> vbox >>|> container
     widgetShowAll container
 
@@ -121,8 +126,8 @@ createMenu window container counter running = do
         liftIO $ mainQuit
     return menubar
 
-createToolbar :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO Toolbar
-createToolbar container counter assembly envs running = do
+createToolbar :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> (Bool -> IO String) -> (Bool -> IO String) -> IO Toolbar
+createToolbar container counter assembly envs running assemblySource stdinSource = do
     counter' <- (readIORef counter) >>= (\num -> return (show num))
     bar <- toolbarNew
     playStock <- toolButtonNewFromStock stockMediaPlay
@@ -136,9 +141,21 @@ createToolbar container counter assembly envs running = do
     play <- toolbarInsert bar playStock 0
     stop <- toolbarInsert bar stopStock 1
     prev <- toolbarInsert bar backStock 2
-    counter <- toolbarInsert bar counterButton 3
+    counterBtn <- toolbarInsert bar counterButton 3
     next <- toolbarInsert bar forwardStock 4
+    onToolButtonClicked playStock $ do
+        case running of
+            True -> return ()
+            False -> do
+                stdin <- (stdinSource False) >>= strToInts
+                assembly' <- assemblySource False
+                envs' <- (makeEnvFromAss assembly' stdin) >>= getFullProgEnv 
+                resetCounter counter
+                redraw container counter assembly' envs' True
     return bar
+
+resetCounter :: IORef Int -> IO ()
+resetCounter counter = modifyIORef' counter (\num -> 0)
 
 createButtons :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO VBox
 createButtons container x assembly envs running = do
@@ -164,9 +181,17 @@ createButtonAction container counter assembly envs running f = (\_ -> do
     redraw container counter assembly envs running
     )
 
-createIO :: Environment -> Bool -> IO VBox
+createIO :: Environment -> Bool -> IO (VBox, (Bool) -> IO String)
 createIO env running = do
     vbox   <- vBoxNew True 10
-    (createTextAreaFrame (Just "Stdin") (Just (toLines $ eStdIn env)) (running == False)) >>|> vbox
+    stdin <- (createTextArea (Just (toLines $ eStdIn env)) (running == False)) 
+    stdin >|>> (createFrame "Stdin") >>|> vbox
     (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) (running == False)) >>|> vbox
-    return vbox
+    return (vbox, getTextViewsText stdin)
+
+getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
+getTextViewsText textView includeHidden = do
+    buffer <- textViewGetBuffer textView
+    start <- textBufferGetStartIter buffer
+    end <- textBufferGetEndIter buffer
+    textBufferGetText buffer start end includeHidden
