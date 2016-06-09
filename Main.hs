@@ -74,7 +74,7 @@ createDrawing container counter assembly envs running = do
     vbox <- vBoxNew False 0
     hbox <- hBoxNew False 10
     env  <- currentEnvironment counter envs
-    (createButtons container counter assembly envs running) >>|> hbox 
+    --(createButtons container counter assembly envs running) >>|> hbox 
     --(createFrame $ "C") >>= (containerAdd hbox)
     assemblyTextView <- (createTextArea (Just assembly) (running == False)) 
     assemblyTextView >|>> (createFrame "Assembly") >>|> hbox
@@ -130,20 +130,30 @@ createToolbar :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Env
 createToolbar container counter assembly envs running assemblySource stdinSource = do
     counter' <- (readIORef counter) >>= (\num -> return (show num))
     bar <- toolbarNew
-    playStock <- toolButtonNewFromStock stockMediaPlay
+    playStock <- buttonNewFromStock stockMediaPlay
+    playStock' <- toolButtonNewFromStock stockMediaPlay
     stopStock <- toolButtonNewFromStock stockMediaStop
     backStock <- toolButtonNewFromStock stockGoBack
     forwardStock <- toolButtonNewFromStock stockGoForward
+    case running of
+        True -> do
+            widgetModifyBg bar StateNormal (Color 34181 47802 30069)
+            widgetSetSensitive playStock' False
+        False -> do
+            widgetSetSensitive stopStock False
+            widgetSetSensitive backStock False
+            widgetSetSensitive forwardStock False
     counterEntry <- entryNew
     entrySetText counterEntry counter'
-    entrySetWidthChars counterEntry (length counter')
+    entrySetWidthChars counterEntry 4
     counterButton <- toolButtonNew (Just counterEntry) (Nothing :: Maybe String)
-    play <- toolbarInsert bar playStock 0
+    widgetSetSensitive counterButton False
+    play <- toolbarInsert bar playStock' 0
     stop <- toolbarInsert bar stopStock 1
     prev <- toolbarInsert bar backStock 2
     counterBtn <- toolbarInsert bar counterButton 3
     next <- toolbarInsert bar forwardStock 4
-    onToolButtonClicked playStock $ do
+    onToolButtonClicked playStock' $ do
         case running of
             True -> return ()
             False -> do
@@ -163,6 +173,12 @@ createToolbar container counter assembly envs running assemblySource stdinSource
             False -> return ()
             True -> do
                 modifyIORef' counter (changeWithPredicate (< (length envs)) (+ 1))
+                redraw container counter assembly envs True
+    onToolButtonClicked backStock $ do
+        case running of
+            False -> return ()
+            True -> do
+                modifyIORef' counter (changeWithPredicate (>= 0 ) (flip (-) 1))
                 redraw container counter assembly envs True
     return bar
 
