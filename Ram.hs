@@ -54,7 +54,6 @@ attachCellsToTable table cells row
 createRowCell :: Int -> IO Frame
 createRowCell row = do
     frame <- frameNew
-    widgetSetSizeRequest frame 50 20
     (labelNew (Just (show row)))
         >>|>> (padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1))
         >>|> frame
@@ -62,10 +61,10 @@ createRowCell row = do
 createRow :: (Maybe String, String) -> IO (Frame, Frame)
 createRow (label, content) = do
     labelFrame <- frameNew
-    widgetSetSizeRequest labelFrame 50 30
+    widgetSetSizeRequest labelFrame 50 (-1)
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
-    widgetSetSizeRequest eventBox 80 30
+    widgetSetSizeRequest eventBox 80 (-1)
     label <- (labelNew (label))
         >>|>> (padWithAlignment (5, 5, 5, 5) (1, 0, 1, 1))
         >>|> labelFrame
