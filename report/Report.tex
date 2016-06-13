@@ -35,12 +35,10 @@ We did stuff. And more stuff, then stuff happened.
 The goal of this project was to create a program that could compile, execute and displayed a C program. It could then be used to go step-by-step through a C program in order to show how the memory and registers are effected by each line of C code. In order to learn functional programming and Mash as a template, this program was created using Haskell. The project could be divided into 5 separate sections, the C parser, the assembly parser, C to assembly code generation, the emulator and the GUI. These were then allocated to three groups, one group would create the C Parser, another the Assembly Parser and Symbol Table, and the last group the Emulator and GUI. The Code generation which converts a C Parse tree to an Assembly Parse tree was not assigned to any group. A diagram of this can be see in Figure \ref{fig:ProjectDiagram}.
 
 \begin{figure}
-{\centering
-
+\centering
 \includegraphics[width=300px]{ProjectDiagram}
-\label{fig:ProjectDiagram}
 \caption{Project diagram showing all the main parts and group allocations.}
-}
+\label{fig:ProjectDiagram}
 \end{figure}
 
 The program that this project created is to be used as a learning tool to help teach C programming. C is a difficult language when starting as there are multiple ways to do the same thing in the language, but some ways are more 'right' than others. The compilers can also be very lenient and compile and run code that is not correct, leading to problems where code ends up running differently on different systems. By having a program that can go step-by-step through a C program, it will be much easier to show why errors are, and explain to students why a program is acting in that way.
@@ -49,18 +47,41 @@ Obviously the C language is very vast, so only a small subset was chosen to a im
 
 Our group was the Visuals Group and was assigned to create the Emulator and GUI. Our project was significantly different from the other two groups which were creating parsers. In general, Callum was responsible for creating the GUI and Andrew created the Emulator and Environment. There was overlap between those sections when designing the programming interface for the emulator and environment, however most of the work was separate. Since the emulator uses an assembly parse tree, we also had to work with the group creating that in order to connect them together.
 
-- ? More ?
+- ? More ? Maybe not.
 
 \section{Process and Design}
-The first task of our group was to determine how we would create a GUI using Haskell that could be completely cross-platform. 
-
 Describe process / design
+
+\subsection{Process}
+
+
+\subsection{Emulator}
+
+\subsection{Graphical User Interface (GUI)}
+\subsubsection{Cross-Platform GUI Solution}
+The first task of our group was to determine how we would create a GUI using Haskell that could be completely cross-platform. Two methods were initially recommended, using Haskell to generate a HTML page that displayed everything, or using the GTK3 Hakell library to create an application window.
+
+The first test was using a HTML page with a small amount of JavaScript to make it interactive. A screenshot of the example page can be seen in figure \ref{}. The idea was that once a program was compiled, it could generate this page with the all the program states loaded in as data. By using HTML, this file could then be opened on any system and the program could be looked at again without needing to be recompiled. However, it also had the huge drawback that the HTML page could not communicate with the emulator, which was too big a drawback for this project.
+
+The next step was to test GTK3, and an example application was also made for it. This test program used Glade to structure the application window and GTK3 to draw it to the screen. A screenshot of the test program can be seen in figure \ref{fig:GTK3Test}. As a demo, it had very limited interactivity, allowing you to  step through a handwritten list of program states and nothing could be modified. It did demonstrate that GTK3 would indeed be suitable for the project, however the use of Glade to position elements on the window was not very useful as most of the windows ended up being built using code.
+
+\begin{figure}
+\centering
+\includegraphics[width=300px]{GTK3TestScreenshot}
+\caption{Screenshot of GTK3 test program.}
+\label{fig:GTK3Test}
+\end{figure}
+
+\subsubsection{ ? }
+- Write stuff here Callum.
 
 \section{Design Details}
 Details about the design.
 present the grammars, etc - No grammers for our project.
 
-\subsection{Windows Compiling}
+- How to compile the project
+
+\subsection{Compiling on Windows}
 Although GTK3 is a cross platform library, getting everything installed on windows to compile it with Haskell is actually quite hard. This tutorial was written based off instructions from multiple websites that were all out of date. 
 \linebreak \\
 \textbf{Step 1}: Haskell on Windows
