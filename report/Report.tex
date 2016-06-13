@@ -45,13 +45,102 @@ The goal of this project was to create a program that could compile, execute and
 
 The program that this project created is to be used as a learning tool to help teach C programming. C is a difficult language when starting as there are multiple ways to do the same thing in the language, but some ways are more 'right' than others. The compilers can also be very lenient and compile and run code that is not correct, leading to problems where code ends up running differently on different systems. By having a program that can go step-by-step through a C program, it will be much easier to show why errors are, and explain to students why a program is acting in that way.
 
-Obviously the C language is very vast, so only a small subset was chosen to a implemented for this project. All variables are either an Int or a pointer, there are no structs and everything must be contained within a single file. Due to the complexity of converting a C parse tree to an assembly parse tree, that part of the project was dropped
+Obviously the C language is very vast, so only a small subset was chosen to a implemented for this project. All variables are either an Int or a pointer, there are no structs and everything must be contained within a single file. This allowed the assembler and emulator to be much simpler and be possible to complete in the time we had.
+
+Our group was the Visuals Group and was assigned to create the Emulator and GUI. Our project was significantly different from the other two groups which were creating parsers. In general, Callum was responsible for creating the GUI and Andrew created the Emulator and Environment. There was overlap between those sections when designing the programming interface for the emulator and environment, however most of the work was separate. Since the emulator uses an assembly parse tree, we also had to work with the group creating that in order to connect them together.
+
+- ? More ?
 
 \section{Process and Design}
+The first task of our group was to determine how we would create a GUI using Haskell that could be completely cross-platform. 
+
 Describe process / design
 
 \section{Design Details}
 Details about the design.
+present the grammars, etc - No grammers for our project.
+
+\subsection{Windows Compiling}
+Although GTK3 is a cross platform library, getting everything installed on windows to compile it with Haskell is actually quite hard. This tutorial was written based off instructions from multiple websites that were all out of date. 
+\linebreak \\
+\textbf{Step 1}: Haskell on Windows
+I used the Haskell Platform to install haskell on Windows. This provides haskell commands (ghc, cabal etc) through the windows command prompt. (\href{https://www.haskell.org/platform/}{https://www.haskell.org/platform/})
+
+\noindent Though any Haskell installation for windows should work just fine for this.
+\linebreak \\
+\textbf{Step 2}: Get the GTK3 and Glade Binaries and dependencies
+In order to get the up to date gtk3 binaries, and all the dependencies, we need to use msys. Download msys (\href{https://sourceforge.net/projects/msys2/}{https://sourceforge.net/projects/msys2/}) and install to a path without spaces. I installed to C:\\dev\\msys . You could do this without msys, but we need quite a few libraries, and they are not easy to find by themselves and it is not recommended to install them without msys.
+
+Once installed, run msys and you'll get a console, this is what we get all the packages with. First we need to update msys. Type:
+Run pacman -Syuu
+
+Then quit the console and open it again.
+
+Now we get the packages. Each package has a 32-bit and 64-bit version. Install the one suitable for you. I was on a 64-bit computer, so I used the 64-bit packages.
+
+\noindent \textbf{pkg-config:}\\
+pacman -S mingw-w64-i686-pkg-config    (32-bit)\\
+pacman -S mingw-w64-x86\_64-pkg-config  (64-bit)\\
+
+\noindent \textbf{cairo:}\\
+pacman -S mingw-w64-i686-cairomm    (32-bit)\\
+pacman -S mingw-w64-x86\_64-cairomm  (64-bit)\\
+
+\noindent \textbf{glib:}\\
+pacman -S mingw-w64-i686-glib2    (32-bit)\\
+pacman -S mingw-w64-x86\_64-glib2  (64-bit)\\
+
+\noindent \textbf{gtk2:}\\
+pacman -S mingw-w64-i686-gtk2    (32-bit)\\
+pacman -S mingw-w64-x86\_64-gtk2  (64-bit)\\
+
+\noindent \textbf{gtk3:}\\
+pacman -S mingw-w64-i686-gtk3    (32-bit)\\
+pacman -S mingw-w64-x86\_64-gtk3  (64-bit)\\
+\linebreak
+\textbf{Step 3}: Haskell packages.
+Now that we have all the c libraries, we can install the connected Haskell packages. First we need to link the c libraries so that Haskell can see them. To do this we need to edit a system environment variable.
+
+Go to \verb"Computer -> System Properties ->" \\
+\indent \verb"Advanced System Properties -> Environment Variables".
+
+\noindent In the top box you'll see a variable called PATH, edit this. Values are separated by ; so add a ; to the end and then put the filepath to \verb"msys64\mingw64\bin". In my case this was \verb"C:\dev\msys64\mingw64\bin". Now open up a windows command prompt (with administer privileges).
+
+\noindent Now for some Haskell libraries we need install. As always, use:\\
+cabal update\\
+
+\noindent Then:\\
+cabal install alex\\
+cabal install happy\\
+cabal install gtk2hs-buildtools\\
+
+\noindent Now it gets harder, there was/is a bug on Windows for a few of the Haskell library. glib, gio, pango and gtk3 all will fail to install directly with cabal. Try to install it first, but if you get an error about \verb"__debugbreak", then you'll have to do some editing.
+
+Navigate to a location where we can unpack each package. I just used \verb"c:\dev\" where I installed msys and the Haskell platform, but the location doesn't matter. Then use cabal unpack to download and unpack the following packages.\\
+
+\noindent cabal unpack glib\\
+cabal unpack gio\\
+cabal unpack pango\\
+cabal unpack gtk\\
+cabal unpack gtk3\\
+
+\noindent Now go into each unpacked package and open the .cabal file, remove the \verb"-D__attribute__(A)=" attribute from the cpp-options.
+\\ \linebreak
+
+\noindent At the time of writing, there is a bug in gio that will cause this error: \\
+\verb"System\GIO\File\IOError.chs:49:15: parse error on input '*'"
+\linebreak
+
+\noindent This bug has already been fixed in gtk2hs, but not in gio. You'll need to edit one of the source files. Find \verb"\gio-0.13.1.1\System\GIO\File\IOError.chs" and delete the \verb"{-# LANGUAGE CPP #-}" line. This file does not require cpp, and cpp ends up processing part of a comment, causing the error.
+\\ \linebreak
+
+\noindent Now manually install each of these pages, go into each unpacked package with the console and type: \\
+cabal install \\
+In the same order as when you unpacked them above.
+\\ \linebreak
+
+\noindent \textbf{Step 4}: Done \\
+You're finally done and should be able to compile this project.
 
 \section{Implementation}
 \subsection{Environment}
