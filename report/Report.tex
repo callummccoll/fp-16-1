@@ -47,15 +47,31 @@ Obviously the C language is very vast, so only a small subset was chosen to a im
 
 Our group was the Visuals Group and was assigned to create the Emulator and GUI. Our project was significantly different from the other two groups which were creating parsers. In general, Callum was responsible for creating the GUI and Andrew created the Emulator and Environment. There was overlap between those sections when designing the programming interface for the emulator and environment, however most of the work was separate. Since the emulator uses an assembly parse tree, we also had to work with the group creating that in order to connect them together.
 
-- ? More ? Maybe not.
+- ? More ? Maybe not. I dunno.
 
 \section{Process and Design}
 Describe process / design
 
 \subsection{Process}
+This project was approached using a prototyping methodology, where a design would be implemented, then assessed and modified or discarded. This approach was used as multiple different solutions were initially suggested for the implementation and each had to be tested and assessed. This method was also useful for filling in the blanks at the start of the project in regards to how it would work with the assembly parse tree, and how the GUI would interact with the emulator. This prototype method meant we could create a template for a part on how it may be designed, then easily update the program once that part was complete.
 
+\subsection{Environment}
+The creation of the Environment was an important early step as it defined the connection between the Emulator and the GUI. An Environment represent a single state of an emulated system, with memory, registers, inputs, outputs and the symbol table. The GUI can then use all the information in an Environment to display the state of a machine, while the Emulator can use that same information to emulate the machine running. Its data structures were mostly designed during an in-class meeting, then it was extended with many utility functions in order to increase its usefulness. 
+
+Since the Environment was created at the start of the project, it was possible to generate a dummy environment with handwritten values in order to test the functionality of the Emulator and GUI. Once the assembly parse tree was completed however, this was replaced with a function that created an environment based on a parse tree and symbol table. This could be used to create the initial state of a system from an assembly file.
+
+Before the parse tree was integrated, the assembly instructions were stored as plain strings, which made it easy to display in the GUI. However with the parse tree, the instructions were now data classes, so six utility functions were created that could give back an instruction as a string. This allowed the functions to be displayed in the way it was expected in the GUI and within error messages in the Emulator.
+
+The last change to the Environment came at the end of the project when it was found we needed a flag to halt emulation and let the GUI know there were no more states. Originally the PC was used to figure out if the emulation was finished, if the PC did not change between two states, it must mean the program is finished. This was changed to a flag in the environment that was set to true when either the HALT command was run, or the program tried to read input and there was none.
 
 \subsection{Emulator}
+The emulator took a significant amount of time over the project and involved reading and executing assembly instructions to a virtual environment. Because this was a rather complex and large piece of code, it was broken in parts. First an instruction was read from memory based on the PC, the type of instruction was then used to call an associated function, for example, a MOVE instruction could call the actionMove function. Each function would then do what it needed to based on he parameters it was given. The largest part of the emulator was the destination and source functions, which needed to handle a wide range of different types of source and destination, each with their own special functions.
+
+The first emulator was created without knowing what the assembly parse tree looked like, and was based off instructions given as strings. While this made the pattern matching for instructions easy, it lead to a huge list of permutations for both the source and destinations. Once the parse tree was available, all the strings were replaced with data types from the parse tree, which made calling the source and destination functions a little trickier, but improved their ability to be recursive with themselves.
+
+Before the environment was designed, the emulator stored memory as just a list of strings. With the environment however, the memory became an IOArray, which made read and writing to it much easier and it was then possible to error check during emulation. If the program tried to read an instruction from a memory location where an Int or nothing was stored, a descriptive error could be printed. This was obviously very useful at the end of the project these error message became very important in testing to make sure the emulator was working correctly. The only bugs found when testing with the GUI revolved around simple logic mistakes with multiple levels of indirection. 
+
+Upon review at the end of the project, many 'actions' within the emulator are repetitive, such as the maths operations and the decision functions. With a little work, these repetitive functions could be combined into a single one. This was a leftover from when string pattern matching was being used to read instructions and these functions were more different from each other.
 
 \subsection{Graphical User Interface (GUI)}
 \subsubsection{Cross-Platform GUI Solution}
@@ -181,6 +197,8 @@ Screenshots of the GUI and output of printing an environment I guess.
 \subsection{Callum McColl's Reflection}
 
 \subsection{Andrew Paroz's Reflection}
+
+
 
 
 \end{document}

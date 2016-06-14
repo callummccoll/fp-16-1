@@ -302,7 +302,7 @@ loadMemory (Program ds) index env = case ds of
             Left iden -> error $ "Symbol Table Not Resolved"
 \end{code}
 
-\noindent \highlighttt{loadMemory} is a function used by \highlighttt{loadMemory} 
+\noindent \highlighttt{loadAlloc} is a function used by \highlighttt{loadMemory} 
 to step through a number of cell spaces, setting each to Undefined. An int 
 for the current index, an int for the number of cells left to fill and the 
 environment are provided and this function loops until the count reaches zero.
