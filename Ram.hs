@@ -13,19 +13,24 @@ type RowData = (Int, Maybe String, String)
 type Row = (Int, Frame, Frame, Frame)
 type RowFactory = RowData -> IO Row
 
-createRamAndRegisters:: Environment -> IO Frame
-createRamAndRegisters env = do
+createRamAndRegisters:: Environment -> Bool -> IO Frame
+createRamAndRegisters env running = do
     case (eRAM env) of
-        Left ram  -> (freeze ram) >>= (getRamFromArray env)
-        Right ram -> getRamFromArray env ram
+        Left ram  -> (freeze ram) >>= (getRamFromArray env running)
+        Right ram -> getRamFromArray env running ram
 
-getRamFromArray :: Environment -> (Array Int Cell) -> IO Frame
-getRamFromArray env ram = do
+getRamFromArray :: Environment -> Bool -> (Array Int Cell) -> IO Frame
+getRamFromArray env running ram = do
     registers <- extractRegisters env
-    factory <- return (createRowWithColouredRegister
-            (ePC env, Color 30000 30000 30000)
-            (eSP env, Color 0 0 0)
-        )
+    factory <- case running of
+        True -> return (createRowWithColouredRegister
+                (ePC env, Color 30000 30000 30000)
+                (eSP env, Color 0 0 0)
+            )
+        False -> return (createRowWithColouredRegister
+                (ePC env, Color 65535 65535 65535)
+                (eSP env, Color 65535 65535 65535)
+            )
     createRam (extractRowData (elems ram) 0) factory registers
 
 extractRegisters :: Environment -> IO [(String, String)]

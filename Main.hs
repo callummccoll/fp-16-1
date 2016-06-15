@@ -86,7 +86,7 @@ createDrawing container counter assembly envs running = do
     env  <- currentEnvironment counter envs
     assemblyTextView <- (createTextArea (Just assembly) (running == False)) 
     assemblyTextView >|>> (createFrame "Assembly") >>|> hbox
-    (createRamAndRegisters env) >>|> hbox
+    (createRamAndRegisters env running) >>|> hbox
     (ioVbox, stdinTextGetter) <- createIO env running
     ioVbox >|> hbox
     stdin <- (stdinTextGetter False) >>= strToInts
