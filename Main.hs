@@ -90,7 +90,7 @@ createDrawing container counter assembly envs running = do
     (ioVbox, stdinTextGetter) <- createIO env running
     ioVbox >|> hbox
     stdin <- (stdinTextGetter False) >>= strToInts
-    createToolbarMenu container counter assembly envs running stdin >>|> vbox
+    createToolbarMenu container counter assembly envs running (getTextViewsText assemblyTextView) stdinTextGetter >>|> vbox
     hbox >|> vbox >>|> container
     widgetShowAll container
 
@@ -111,11 +111,15 @@ createIO env running = do
     return (vbox, getTextViewsText stdin)
 
 
-createToolbarMenu :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> [Int] -> IO Toolbar
-createToolbarMenu container counter assembly envs running stdin = do
+createToolbarMenu :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> (Bool -> IO String) -> (Bool -> IO String) -> IO Toolbar
+createToolbarMenu container counter assembly envs running assemblySource stdinSource = do
     playBtn <- createPlayBtn running (\_ -> do
             resetCounter counter
-            redraw container counter assembly envs True
+            stdin <- (stdinSource False) >>= strToInts
+            assembly' <- assemblySource False
+            env <- makeEnvFromAss assembly' stdin
+            envs' <- getFullProgEnv env
+            redraw container counter assembly' envs' True
         )
     stopBtn <- createStopBtn running (\_ -> do
             resetCounter counter
