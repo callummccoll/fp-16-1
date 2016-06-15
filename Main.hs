@@ -130,8 +130,7 @@ createToolbarMenu container counter assembly envs running stdin = do
             redraw container counter assembly envs True
         )
     counterBtn <- createCounterBtn counter
-    bar <- createToolbar (toToolItem <$> [playBtn, stopBtn, previousBtn, counterBtn, nextBtn])
-    return bar
+    createToolbar (toToolItem <$> [playBtn, stopBtn, previousBtn, counterBtn, nextBtn])
 
 createPlayBtn :: Bool -> (() -> IO ()) -> IO ToolButton
 createPlayBtn running f = createToolbarButton stockMediaPlay running f

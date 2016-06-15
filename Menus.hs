@@ -31,7 +31,8 @@ createMenu window f = do
                 fileName <- fileChooserGetFilename dialog
                 case fileName of
                     Just fileName' -> f fileName'
-            _              -> return ()
+                    Nothing        -> return ()
+            _ -> return ()
         widgetDestroy dialog
         return ()
     exit `on` menuItemActivate $ do
@@ -40,7 +41,6 @@ createMenu window f = do
 
 createToolbar :: [ToolItem] -> IO Toolbar
 createToolbar items = do
-    --counter' <- (readIORef counter) >>= (\num -> return (show num))
     bar <- toolbarNew
     insertItems bar items 0
     return bar
@@ -63,61 +63,3 @@ createToolButtonFromStock stockId disabled f = do
             onToolButtonClicked btn $ do
                 f' ()
             return btn
-
-
-
-
-
-
-
-    {-
-    playStock <- buttonNewFromStock stockMediaPlay
-    playStock' <- toolButtonNewFromStock stockMediaPlay
-    stopStock <- toolButtonNewFromStock stockMediaStop
-    backStock <- toolButtonNewFromStock stockGoBack
-    forwardStock <- toolButtonNewFromStock stockGoForward
-    case running of
-        True -> do
-            widgetSetSensitive playStock' False
-        False -> do
-            widgetSetSensitive stopStock False
-            widgetSetSensitive backStock False
-            widgetSetSensitive forwardStock False
-    counterEntry <- entryNew
-    entrySetText counterEntry counter'
-    entrySetWidthChars counterEntry 4
-    counterButton <- toolButtonNew (Just counterEntry) (Nothing :: Maybe String)
-    widgetSetSensitive counterButton False
-    play <- toolbarInsert bar playStock' 0
-    stop <- toolbarInsert bar stopStock 1
-    prev <- toolbarInsert bar backStock 2
-    counterBtn <- toolbarInsert bar counterButton 3
-    next <- toolbarInsert bar forwardStock 4
-    onToolButtonClicked playStock' $ do
-        case running of
-            True -> return ()
-            False -> do
-                stdin <- (stdinSource False) >>= strToInts
-                assembly' <- assemblySource False
-                envs' <- (makeEnvFromAss assembly' stdin) >>= getFullProgEnv 
-                resetCounter counter
-                redraw container counter assembly' envs' True
-    onToolButtonClicked stopStock $ do
-        case running of
-            False -> return ()
-            True -> do
-                resetCounter counter
-                redraw container counter assembly envs False
-    onToolButtonClicked forwardStock $ do
-        case running of
-            False -> return ()
-            True -> do
-                modifyIORef' counter (changeWithPredicate (< (length envs)) (+ 1))
-                redraw container counter assembly envs True
-    onToolButtonClicked backStock $ do
-        case running of
-            False -> return ()
-            True -> do
-                modifyIORef' counter (changeWithPredicate (>= 0 ) (flip (-) 1))
-                redraw container counter assembly envs True
-    -}
