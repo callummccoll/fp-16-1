@@ -1,0 +1,9 @@
+	CALL Main
+	HALT
+Main:
+	CALL read
+C:	CALL print
+	BGT S
+	RETURN	
+S:	SUB #1 A
+	JUMP C

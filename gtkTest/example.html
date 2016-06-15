@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="text/html;charset=utf-8" http-equiv="Content-Type">
+		<meta http-equiv="utf-8" http-equiv="encoding">
+		<title></title>
+		<meta http-equiv="description" content="" />
+		
+		<style>
+.nav {
+	text-align: center;
+	margin: 10px;
+}
+.cCode {
+	width: 25%;
+	height 100%;
+	float : left;
+	padding: 10px;
+    border: 1px solid black;
+	border-right: none;
+} 
+.cHighlight {
+	background-color: #F77;
+	margin:0px;
+	padding:0px;
+	width: 200px;
+}
+.aCode {
+	width: 25%;
+	height 100%;
+	float: left;
+	padding: 10px;
+    border: 1px solid black;
+	border-right: none;
+} 
+.aHighlight {
+	background-color: #F77;
+}
+.mem {
+	width: 40%;
+	height 100%;
+	float: left;
+	padding: 10px;
+    border: 1px solid black;
+} 
+.stack {
+	width: 40%;
+	height 100%;
+	float: left;
+} 
+.stackLabel {
+	min-width: 50px;
+	text-align: right;
+}
+.stackValue {
+	border: 1px solid black;
+	min-width: 200px;
+	height: 20px;
+	text-align: center;
+}
+.register {
+	text-align: right;
+}
+.registerNum {
+	padding: 2px;
+	padding-left: 5px;
+	padding-right: 5px;
+	float: right;
+	border: 1px solid black;
+}
+		</style>
+		
+		<script>
+var cCode = "int x = 1;\n\nint main () {\n	int y = 3;\n	int z;\n	z = y + x;\n	print(z);\n}"
+var aCode = "MOV #1 X\nCALL main\nHALT\nSUB #2 SP\nMOV #3 (SP)\nMOV (SP) A\nADD X A\nMOV A 1(SP)\nMOV 1(SP) A\nCALL print\nADD #1 SP\nADD #2 SP\nRETURN"
+
+var steps = [
+{lineC: 0, lineA: 0, pc: 0, sp: 22, a: 0, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "", value: ""},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""}]},
+{lineC: 0, lineA: 1, pc: 1, sp: 22, a: 0, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""}]},
+{lineC: 3, lineA: 3, pc: 3, sp: 22, a: 0, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""}]},
+{lineC: 3, lineA: 4, pc: 4, sp: 20, a: 0, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "", value: "?"},{label: "", value: "?"}]},
+{lineC: 5, lineA: 5, pc: 5, sp: 20, a: 0, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "y", value: "3"},{label: "z", value: "?"}]},
+{lineC: 5, lineA: 6, pc: 6, sp: 20, a: 3, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "y", value: "3"},{label: "z", value: "?"}]},
+{lineC: 5, lineA: 7, pc: 7, sp: 20, a: 4, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "y", value: "3"},{label: "z", value: "?"}]},
+{lineC: 6, lineA: 8, pc: 8, sp: 20, a: 4, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "y", value: "3"},{label: "z", value: "4"}]},
+{lineC: 6, lineA: 9, pc: 9, sp: 20, a: 4, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "y", value: "3"},{label: "z", value: "4"}]},
+{lineC: 7, lineA: 10, pc: 10, sp: 19, a: 4, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "", value: "print"}, {label: "y", value: "3"},{label: "z", value: "4"}]},
+{lineC: 7, lineA: 11, pc: 11, sp: 20, a: 4, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""},{label: "y", value: "3"},{label: "z", value: "4"}]},
+{lineC: 7, lineA: 12, pc: 12, sp: 22, a: 4, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""}]},
+{lineC: 8, lineA: 2, pc: 2, sp: 22, a: 4, stack: [{label: "Start", value: "MOV #1 X"},{label: "", value: "CALL Main"},{label: "", value: "HALT"},{label: "Main", value: "SUB #1 SP"}, {label: "", value: "MOV #3 (SP)"},{label: "", value: "MOV (SP) A"},{label: "", value: "ADD X A"},{label: "", value: "MOV A 1(SP)"},{label: "", value: "MOV 1(SP) A"},{label: "", value: "CALL print"},{label: "", value: "ADD #1 SP"},{label: "", value: "ADD #2 SP"},{label: "", value: "RETURN"},{label: "X", value: "1"},{label: "Heap", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "", value: ""},{label: "Stack", value: ""}]},
+]
+
+var stepCounter = 0; //should always be the same as the PC.
+
+function main() {	
+	drawStep(0);
+}
+
+function drawStep(index) {
+	var step = steps[index];
+
+	//highlight c and assembly code lines
+	document.getElementById("cCode").innerHTML = "<pre>" + insertHighlight(cCode, step.lineC, "cHighlight") + "</pre>";
+	document.getElementById("aCode").innerHTML = "<pre>" + insertHighlight(aCode, step.lineA, "aHighlight") + "</pre>";
+	
+	//update registries	
+	document.getElementById("PC").innerHTML = step.pc;
+	document.getElementById("SP").innerHTML = step.sp;
+	document.getElementById("A").innerHTML = step.a;
+	
+	//draw the stack.
+	var stackString = "<table>";
+	for (var i = 0; i < steps[index].stack.length; i++) {
+		var line = steps[index].stack[i];
+		stackString += "<tr>";
+		stackString += "<td class=\"stackLabel\">"+line.label+"</td>";
+		if (line.value.length > 0) {
+			stackString += "<td class=\"stackValue\">"+line.value+"</td>";
+		} else {
+			stackString += "<td class=\"stackValue\"><pre></pre></td>";
+		}
+		
+		stackString += "</tr>";
+	}
+	stackString += "</table>";
+	
+	document.getElementById("stack").innerHTML = stackString;
+}
+
+function next() {
+	stepCounter++;
+	if (stepCounter == steps.length) {
+		stepCounter--;
+	}
+	drawStep(stepCounter);
+}
+
+function previous() {
+	stepCounter--;
+	if (stepCounter < 0) {
+		stepCounter++;
+	}
+	drawStep(stepCounter);
+}
+
+function insertHighlight(string, lineNum, className) {
+	
+	var newString = "";
+	var done = false;
+	var lineCount = 0;
+	
+	//special case, no highlight
+	if (lineNum == -1) {
+		return string;
+	}
+	
+	//special case, first line
+	if (lineNum == 0) {
+		newString += "\n<span class=\""+className+"\">";
+	}
+	
+	for (var i = 0; i < string.length; i++) {	
+		if (string[i] == '\n') {
+			lineCount++;
+			if (lineCount == lineNum) {
+				newString += "\n<span class=\""+className+"\">";
+			} else if (lineCount == lineNum+1) {
+				newString += "</span>\n";
+			} else {
+				newString += "\n";
+			}
+		} else {
+			newString += string[i];
+		}
+	}
+	
+	return newString;
+}
+
+		</script>
+	</head>
+	
+	<body onload=main()>
+		<div class="nav">
+			<button onclick=previous()>Previous</button>
+			<button onclick=next()>Next</button>
+		</div>
+		<div class="content">
+			<div class="cCode" id="cCode">
+			</div>
+			<div class="aCode" id="aCode">
+			</div>
+			<div class="mem" id="mem">
+				<div class="stack" id="stack">
+					<table>
+						<tr>
+							<td class="stackLabel"></td>
+							<td class="stackValue"></td>
+						</tr>
+					</table>
+				</div>
+				<div class="register">
+					<table>
+						<tr>
+							<td>Program Counter: </td>
+							<td><div class="registerNum" id="PC">?</div></td>
+						</tr>
+						<tr>
+							<td>Stack Pointer: </td>
+							<td><div class="registerNum" id="SP">?</div></td>
+						</tr>
+						<tr>
+							<td>Accumulator: </td>
+							<td><div class="registerNum" id="A">?</div></td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -51,7 +51,7 @@ getProgList env count envs = do
       return envs
    else do
       env'' <- eFreezeEnv env'
-      --print (env'')
+      print (env'')
       getProgList env' (count+1) (envs ++ [env''])
 \end{code}
 
@@ -280,11 +280,23 @@ actionMod src dest env = do
 \begin{code}
 -- JUMP: Sets PC to address it is given.
 actionJump :: Value -> Environment -> IO Environment
-actionJump addr env = do
-   let dPC = DRegister (vPos addr) (Register (vPos addr) "PC")
-   let s = Source (vPos addr) (Left (DValue (vPos addr) addr))
+actionJump addr env = let 
+      d = DRegister (0, 0) (Register (0, 0) "PC")
+   in case (vVal addr) of
+      Left iden -> do
+         let addr = (getAddress (idName iden) env)
+         setDestValue d addr env
+      Right ui -> do
+         setDestValue d (uiVal ui) env
+{-
+do
+   let dPC = DRegister (0,0) (Register (0,0) "PC")
+   let s = Source (0,0) (Left (DValue (0,0) addr))
    x <- getSourceValue s env
    setDestValue dPC (snd x) (fst x)
+   -}
+
+   
 \end{code}
 
 \noindent The \highlighttt{actionBEQ} function emulates the JUMP instruction on the environment and takes two arguements, a value and the current environment. If the accumulator equals 0, then the PC is set to the value provided, if not, then the PC is incremented. In both instances, the environment is then returned.
@@ -299,11 +311,13 @@ actionBEQ addr env = do
    let aV = snd tS
    if aV == 0
    then case (vVal addr) of
-      Left iden -> do 
-         let s = Source (0,0) (Left (DValue (0,0) addr))
-         x <- getSourceValue s env
-         return (fst x) {ePC = (snd x)}
-      Right ui -> return env {ePC = (uiVal ui)}
+      Left iden -> do
+         let addr = (getAddress (idName iden) env')
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d addr env'
+      Right ui -> do
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d (uiVal ui) env
    else incrementPC env'
 \end{code}
 
@@ -319,11 +333,13 @@ actionBNE addr env = do
    let aV = snd tS
    if aV /= 0
    then case (vVal addr) of
-      Left iden -> do 
-         let s = Source (0,0) (Left (DValue (0,0) addr))
-         x <- getSourceValue s env
-         return (fst x) {ePC = (snd x)}
-      Right ui -> return env {ePC = (uiVal ui)}
+      Left iden -> do
+         let addr = (getAddress (idName iden) env')
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d addr env'
+      Right ui -> do
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d (uiVal ui) env
    else incrementPC env'
 \end{code}
 
@@ -337,13 +353,15 @@ actionBLT addr env = do
    tS <- getSourceValue s env
    let env' = fst tS
    let aV = snd tS
-   if aV <= 0
+   if aV < 0
    then case (vVal addr) of
-      Left iden -> do 
-         let s = Source (0,0) (Left (DValue (0,0) addr))
-         x <- getSourceValue s env
-         return (fst x) {ePC = (snd x)}
-      Right ui -> return env {ePC = (uiVal ui)}
+      Left iden -> do
+         let addr = (getAddress (idName iden) env')
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d addr env'
+      Right ui -> do
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d (uiVal ui) env
    else incrementPC env'
 \end{code}
 
@@ -357,13 +375,15 @@ actionBGT addr env = do
    tS <- getSourceValue s env
    let env' = fst tS
    let aV = snd tS
-   if aV >= 0
+   if aV > 0
    then case (vVal addr) of
-      Left iden -> do 
-         let s = Source (0,0) (Left (DValue (0,0) addr))
-         x <- getSourceValue s env
-         return (fst x) {ePC = (snd x)}
-      Right ui -> return env {ePC = (uiVal ui)}
+      Left iden -> do
+         let addr = (getAddress (idName iden) env')
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d addr env'
+      Right ui -> do
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d (uiVal ui) env
    else incrementPC env'
 \end{code}
 
@@ -379,11 +399,13 @@ actionBLE addr env = do
    let aV = snd tS
    if aV <= 0
    then case (vVal addr) of
-      Left iden -> do 
-         let s = Source (0,0) (Left (DValue (0,0) addr))
-         x <- getSourceValue s env
-         return (fst x) {ePC = (snd x)}
-      Right ui -> return env {ePC = (uiVal ui)}
+      Left iden -> do
+         let addr = (getAddress (idName iden) env')
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d addr env'
+      Right ui -> do
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d (uiVal ui) env
    else incrementPC env'
 \end{code}
 
@@ -399,11 +421,13 @@ actionBGE addr env = do
    let aV = snd tS
    if aV >= 0
    then case (vVal addr) of
-      Left iden -> do 
-         let s = Source (0,0) (Left (DValue (0,0) addr))
-         x <- getSourceValue s env
-         return (fst x) {ePC = (snd x)}
-      Right ui -> return env {ePC = (uiVal ui)}
+      Left iden -> do
+         let addr = (getAddress (idName iden) env')
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d addr env'
+      Right ui -> do
+         let d = DRegister (0, 0) (Register (0, 0) "PC")
+         setDestValue d (uiVal ui) env
    else incrementPC env'
 \end{code}
 
