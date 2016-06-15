@@ -81,7 +81,14 @@ Upon review at the end of the project, many 'actions' within the emulator are re
 \subsubsection{Cross-Platform GUI Solution}
 The first task of our group was to determine how we would create a GUI using Haskell that could be completely cross-platform. Two methods were initially recommended, using Haskell to generate a HTML page that displayed everything, or using the GTK3 Hakell library to create an application window.
 
-The first test was using a HTML page with a small amount of JavaScript to make it interactive. A screenshot of the example page can be seen in figure \ref{}. The idea was that once a program was compiled, it could generate this page with the all the program states loaded in as data. By using HTML, this file could then be opened on any system and the program could be looked at again without needing to be recompiled. However, it also had the huge drawback that the HTML page could not communicate with the emulator, which was too big a drawback for this project.
+The first test was using a HTML page with a small amount of JavaScript to make it interactive. A screenshot of the example page can be seen in figure \ref{fig:WebTest}. The idea was that once a program was compiled, it could generate this page with the all the program states loaded in as data. By using HTML, this file could then be opened on any system and the program could be looked at again without needing to be recompiled. However, it also had the huge drawback that the HTML page could not communicate with the emulator, which was too big a drawback for this project.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=300px]{WebScreenshot}
+\caption{Screenshot of Web display.}
+\label{fig:WebTest}
+\end{figure}
 
 The next step was to test GTK3, and an example application was also made for it. This test program used Glade to structure the application window and GTK3 to draw it to the screen. A screenshot of the test program can be seen in figure \ref{fig:GTK3Test}. As a demo, it had very limited interactivity, allowing you to  step through a handwritten list of program states and nothing could be modified. It did demonstrate that GTK3 would indeed be suitable for the project, however the use of Glade to position elements on the window was not very useful as most of the windows ended up being built using code.
 
@@ -117,7 +124,9 @@ The GUI runs in two states.  Firstly when the GUI first launches it is in "edit"
 Details about the design.
 present the grammars, etc - No grammers for our project.
 
-- How to compile the project
+- ? How to compile the project
+
+- ? Anything else you can think of?
 
 \subsection{Compiling on Windows}
 Although GTK3 is a cross platform library, getting everything installed on windows to compile it with Haskell is actually quite hard. This tutorial was written based off instructions from multiple websites that were all out of date. 
@@ -215,6 +224,7 @@ GTK3 runs everything through a main loop.  Therefore it uses an event-driven par
 Screenshots of the GUI and output of printing an environment I guess.
 
 \section{Conclusion}
+- ? Something goes here.
 
 \subsection{Callum McColl's Reflection}
 
