@@ -32,7 +32,7 @@ We did stuff. And more stuff, then stuff happened.
 \listoffigures
 
 \section{Introduction}
-The goal of this project was to create a program that could compile, execute and displaye a C program. It could then be used to go step-by-step through a C program in order to show how the memory and registers are effected by each line of C code. In order to learn functional programming and Mash as a template, this program was created using Haskell. The project could be divided into 5 separate sections, the C parser, the assembly parser, C to assembly code generation, the emulator and the GUI. These were then allocated to three groups, one group would create the C Parser, another the Assembly Parser and Symbol Table, and the last group the Emulator and GUI. The Code generation which converts a C Parse tree to an Assembly Parse tree was not assigned to any group. A diagram of this can be see in Figure \ref{fig:ProjectDiagram}.
+The goal of this project was to create a program that could compile, execute and displaye a C program. It could then be used to go step-by-step through a C program in order to show how the memory and registers are effected by each line of C code. In order to learn functional programming and Mash as a template, this program was created using Haskell. The project could be divided into 5 separate sections, the C parser, the assembly parser, C to assembly code generation, the emulator and the GUI. These were then allocated to three groups, one group would create the C Parser, another the Assembly Parser and Symbol Table, and the last group the Emulator and GUI. The Code generation which converts a C Parse tree to an Assembly Parse tree was not assigned to any group. A diagram of this can be see in Figure~\ref{fig:ProjectDiagram}.
 
 \begin{figure}[h]
 \centering
@@ -81,7 +81,7 @@ Upon review at the end of the project, many 'actions' within the emulator are re
 \subsubsection{Cross-Platform GUI Solution}
 The first task of our group was to determine how we would create a GUI using Haskell that could be completely cross-platform. Two methods were initially recommended, using Haskell to generate a HTML page that displayed everything, or using the GTK3 Hakell library to create an application window.
 
-The first test was using a HTML page with a small amount of JavaScript to make it interactive. A screenshot of the example page can be seen in figure \ref{fig:WebTest}. The idea was that once a program was compiled, it could generate this page with the all the program states loaded in as data. By using HTML, this file could then be opened on any system and the program could be looked at again without needing to be recompiled. However, it also had the huge drawback that the HTML page could not communicate with the emulator, which was too big a drawback for this project.
+The first test was using a HTML page with a small amount of JavaScript to make it interactive. A screenshot of the example page can be seen in figure~\ref{fig:WebTest}. The idea was that once a program was compiled, it could generate this page with the all the program states loaded in as data. By using HTML, this file could then be opened on any system and the program could be looked at again without needing to be recompiled. However, it also had the huge drawback that the HTML page could not communicate with the emulator, which was too big a drawback for this project.
 
 \begin{figure}[h]
 \centering
@@ -90,7 +90,7 @@ The first test was using a HTML page with a small amount of JavaScript to make i
 \label{fig:WebTest}
 \end{figure}
 
-The next step was to test GTK3, and an example application was also made for it. This test program used Glade to structure the application window and GTK3 to draw it to the screen. A screenshot of the test program can be seen in figure \ref{fig:GTK3Test}. As a demo, it had very limited interactivity, allowing you to  step through a handwritten list of program states and nothing could be modified. It did demonstrate that GTK3 would indeed be suitable for the project, however the use of Glade to position elements on the window was not very useful as most of the windows ended up being built using code.
+The next step was to test GTK3, and an example application was also made for it. This test program used Glade to structure the application window and GTK3 to draw it to the screen. A screenshot of the test program can be seen in figure~\ref{fig:GTK3Test}. As a demo, it had very limited interactivity, allowing you to  step through a handwritten list of program states and nothing could be modified. It did demonstrate that GTK3 would indeed be suitable for the project, however the use of Glade to position elements on the window was not very useful as most of the windows ended up being built using code.
 
 \begin{figure}[h]
 \centering
@@ -102,7 +102,7 @@ The next step was to test GTK3, and an example application was also made for it.
 \subsubsection{The Final Product}
 While using Glade supplied a very nice proof-of-concept implementation, it became quite difficult to manage the dynamic nature of the program.  Therefore it was decided that attempting to complete the project using Glade was dropped for an entirely code based approach.
 
-The final product follows from the proof-of-concept implementation but does of course emulate the assembly source code that it is given.  Unfortunately the C parsing was not completed so it was decided to abandon the C frame which is shown in the proof-of-concept implementation for more screen real estate.  The GUI has a main menu bar at the top which can be used to open other assembly source files.  Below the menu is a tool bar which presents play, stop, previous and next buttons.  This allows us to modify the assembly code and then run it much like other IDE's allow you to do.  Figures \ref{fig:screen_shot} and \ref{fig:screen_shot_running} show the final product when the assembly is editable and when it is begin emulated.
+The final product follows from the proof-of-concept implementation but does of course emulate the assembly source code that it is given.  Unfortunately the C parsing was not completed so it was decided to abandon the C frame which is shown in the proof-of-concept implementation for more screen real estate.  The GUI has a main menu bar at the top which can be used to open other assembly source files.  Below the menu is a tool bar which presents play, stop, previous and next buttons.  This allows us to modify the assembly code and then run it much like other IDE's allow you to do.  Figures~\ref{fig:screen_shot} and~ \ref{fig:screen_shot_running} show the final product when the assembly is editable and when it is begin emulated.
 
 The GUI runs in two states.  Firstly when the GUI first launches it is in "edit" mode.  This means that the assembly source code and stdin are editable.  Once the user wants to run the emulation they then press the "play" button.  This runs the emulation.  The user is then able to step through the program.
 
@@ -224,15 +224,31 @@ GTK3 runs everything through a main loop.  Therefore it uses an event-driven par
 Screenshots of the GUI and output of printing an environment I guess.
 
 \subsection{Emulation}
-It is a little hard to show the end result of running an emulation, however figure \ref{fig:EnvironmentResult} shows a printout of the final state of a program once it has been emulated. Every instruction that can be parsed has been tested to make sure it works in relation to the original machine design that was created.
+It is a little hard to show the end result of running an emulation, however figure~\ref{fig:EmulationResult} shows a printout of the final state of a program once it has been emulated. Every instruction that can be parsed has been tested to make sure it works in the way expected from the original machine design that was created.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=300px]{EmulationResult}
-    \caption{Printout of an Emulation state.}
-    \label{fig:EnvironmentResult}
+    \caption{Final state of countdown.ass after emulation.}
+    \label{fig:EmulationResult}
 \end{figure}
 
+The assembly program "countdown.ass" (figure~\ref{fig:CountdownCode}) was written to test out a number of parts within the emulator, such as comparisons and loops, with a semi-realistic function. The program takes an input and counts down until 0 printing each number as it goes. There may still be errors in the emulation in regards to more complex instructions using post/pre increments/decrements and indirection in unusual ways, however I feel all those mistakes have been found from the testing we've conducted.
+
+\begin{figure}[h]
+\begin{code}
+      CALL Main
+      HALT
+Main: CALL read
+   C: CALL print
+      BGT S
+      RETURN	
+   S: SUB #1 A
+      JUMP C
+\end{code}
+    \caption{Code for countdown.ass program.}
+    \label{fig:CountdownCode}
+\end{figure}
 
 \section{Conclusion}
 - ? Something goes here.

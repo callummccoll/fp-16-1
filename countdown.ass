@@ -2,6 +2,7 @@
 	HALT
 Main:
 	CALL read
+	MOVE A -(SP)
 C:	CALL print
 	BGT S
 	RETURN	

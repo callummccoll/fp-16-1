@@ -5,7 +5,7 @@
 
 HC = ghc
 
-ARGS = test.ass 5
+ARGS = countdown.ass 5
 BIN = main 
 SRCDIR = .
 ifeq ($(OS),Windows_NT)

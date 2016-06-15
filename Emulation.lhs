@@ -51,7 +51,7 @@ getProgList env count envs = do
       return envs
    else do
       env'' <- eFreezeEnv env'
-      print (env'')
+      --print (env'')
       getProgList env' (count+1) (envs ++ [env''])
 \end{code}
 
@@ -287,16 +287,7 @@ actionJump addr env = let
          let addr = (getAddress (idName iden) env)
          setDestValue d addr env
       Right ui -> do
-         setDestValue d (uiVal ui) env
-{-
-do
-   let dPC = DRegister (0,0) (Register (0,0) "PC")
-   let s = Source (0,0) (Left (DValue (0,0) addr))
-   x <- getSourceValue s env
-   setDestValue dPC (snd x) (fst x)
-   -}
-
-   
+         setDestValue d (uiVal ui) env   
 \end{code}
 
 \noindent The \highlighttt{actionBEQ} function emulates the JUMP instruction on the environment and takes two arguements, a value and the current environment. If the accumulator equals 0, then the PC is set to the value provided, if not, then the PC is incremented. In both instances, the environment is then returned.
