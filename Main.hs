@@ -4,6 +4,7 @@ import Assembly
 import Emulation
 import Environment
 import Helpers
+import Menus
 import Presentation
 import Ram
 
@@ -36,7 +37,7 @@ main = do
     -- Create the container and layout of the menu.
     vbox <- vBoxNew False 10
     content <- vBoxNew False 0
-    menubar <- createMenu window content counter False
+    menubar <- createMenu window (redrawFromFile content counter)
     boxPackStart vbox menubar PackNatural 5
     content >|> vbox >>|> window
     -- Draw the Window.
@@ -48,6 +49,15 @@ main = do
     widgetShowAll window
     -- Start the application.
     mainGUI
+
+redrawFromFile :: (ContainerClass c) => c -> IORef Int -> String -> IO ()
+redrawFromFile container counter fileName = do
+    (assembly, env) <- (environmentFromFile fileName [])
+    envs <- env >>= getFullProgEnv 
+    -- Reset the counter to 0
+    modifyIORef' counter (\_ -> 0)
+    -- Draw the Window.
+    redraw container counter assembly envs False
 
 fileFromArgs :: IO (Maybe String, [Int])
 fileFromArgs = do
@@ -74,14 +84,14 @@ createDrawing container counter assembly envs running = do
     vbox <- vBoxNew False 0
     hbox <- hBoxNew False 10
     env  <- currentEnvironment counter envs
-    --(createButtons container counter assembly envs running) >>|> hbox 
-    --(createFrame $ "C") >>= (containerAdd hbox)
     assemblyTextView <- (createTextArea (Just assembly) (running == False)) 
     assemblyTextView >|>> (createFrame "Assembly") >>|> hbox
-    (createRamAndRegisters env) >>|> hbox
+    (createRamAndRegisters env running) >>|> hbox
     (ioVbox, stdinTextGetter) <- createIO env running
     ioVbox >|> hbox
-    (createToolbar container counter assembly envs running (getTextViewsText assemblyTextView) stdinTextGetter) >>|> vbox
+    stdin <- (stdinTextGetter False) >>= strToInts
+    bar <- createToolbarMenu container counter assembly envs running (getTextViewsText assemblyTextView) stdinTextGetter
+    boxPackStart vbox bar PackNatural 0
     hbox >|> vbox >>|> container
     widgetShowAll container
 
@@ -90,123 +100,8 @@ currentEnvironment x envs = do
     i <- readIORef x
     return (envs ! i)
 
-createMenu :: (ContainerClass c) => Window -> c -> IORef Int -> Bool -> IO MenuBar
-createMenu window container counter running = do
-    menubar <- menuBarNew
-    fileMenu <- menuNew
-    file <- menuItemNewWithLabel "File"
-    open <- menuItemNewWithLabel "Open..."
-    separator <- separatorMenuItemNew
-    exit <- menuItemNewWithLabel "Exit"
-    menuItemSetSubmenu file fileMenu
-    menuShellAppend fileMenu open
-    menuShellAppend fileMenu separator
-    menuShellAppend fileMenu exit
-    menuShellAppend menubar file
-    open `on` menuItemActivate $ do
-        dialog <- fileChooserDialogNew
-            (Just "Choose Assmebly File")
-            (Just window)
-            FileChooserActionOpen
-            [("Open", ResponseAccept), ("Cancel", ResponseCancel)]
-        widgetShow dialog
-        response <- dialogRun dialog
-        case response of
-            ResponseAccept -> do
-                Just fileName <- fileChooserGetFilename dialog
-                widgetDestroy dialog
-                (assembly, env) <- (environmentFromFile fileName [])
-                envs <- env >>= getFullProgEnv 
-                modifyIORef' counter (\_ -> 0)
-                -- Draw the Window.
-                redraw container counter assembly envs running
-            _ -> widgetDestroy dialog
-        return ()
-    exit `on` menuItemActivate $ do
-        liftIO $ mainQuit
-    return menubar
-
-createToolbar :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> (Bool -> IO String) -> (Bool -> IO String) -> IO Toolbar
-createToolbar container counter assembly envs running assemblySource stdinSource = do
-    counter' <- (readIORef counter) >>= (\num -> return (show num))
-    bar <- toolbarNew
-    playStock <- buttonNewFromStock stockMediaPlay
-    playStock' <- toolButtonNewFromStock stockMediaPlay
-    stopStock <- toolButtonNewFromStock stockMediaStop
-    backStock <- toolButtonNewFromStock stockGoBack
-    forwardStock <- toolButtonNewFromStock stockGoForward
-    case running of
-        True -> do
-            widgetSetSensitive playStock' False
-        False -> do
-            widgetSetSensitive stopStock False
-            widgetSetSensitive backStock False
-            widgetSetSensitive forwardStock False
-    counterEntry <- entryNew
-    entrySetText counterEntry counter'
-    entrySetWidthChars counterEntry 4
-    counterButton <- toolButtonNew (Just counterEntry) (Nothing :: Maybe String)
-    widgetSetSensitive counterButton False
-    play <- toolbarInsert bar playStock' 0
-    stop <- toolbarInsert bar stopStock 1
-    prev <- toolbarInsert bar backStock 2
-    counterBtn <- toolbarInsert bar counterButton 3
-    next <- toolbarInsert bar forwardStock 4
-    onToolButtonClicked playStock' $ do
-        case running of
-            True -> return ()
-            False -> do
-                stdin <- (stdinSource False) >>= strToInts
-                assembly' <- assemblySource False
-                envs' <- (makeEnvFromAss assembly' stdin) >>= getFullProgEnv 
-                resetCounter counter
-                redraw container counter assembly' envs' True
-    onToolButtonClicked stopStock $ do
-        case running of
-            False -> return ()
-            True -> do
-                resetCounter counter
-                redraw container counter assembly envs False
-    onToolButtonClicked forwardStock $ do
-        case running of
-            False -> return ()
-            True -> do
-                modifyIORef' counter (changeWithPredicate (< (length envs)) (+ 1))
-                redraw container counter assembly envs True
-    onToolButtonClicked backStock $ do
-        case running of
-            False -> return ()
-            True -> do
-                modifyIORef' counter (changeWithPredicate (>= 0 ) (flip (-) 1))
-                redraw container counter assembly envs True
-    return bar
-
 resetCounter :: IORef Int -> IO ()
 resetCounter counter = modifyIORef' counter (\num -> 0)
-
-createButtons :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> IO VBox
-createButtons container x assembly envs running = do
-    vbox <- vBoxNew True 10
-    (createButton (createButtonFactory "next" x)
-        (createButtonAction container x assembly envs running
-        (changeWithPredicate (< (length envs)) (+ 1))))
-        >>|> vbox
-    (createButton (createButtonFactory "previous" x)
-        (createButtonAction container x assembly envs running
-        (changeWithPredicate (>= 0) (flip (-) 1))))
-        >>|> vbox
-    return vbox
-
-createButtonFactory :: String -> IORef Int -> (() -> IO Button)
-createButtonFactory name counter = (\_ -> do
-    (readIORef counter) >>= (\num -> buttonNewWithLabel (name ++ " " ++ (show num)))
-    )
-
-createButtonAction :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> (Int -> Int) -> (() -> IO ())
-createButtonAction container counter assembly envs running f = (\_ -> do
-    modifyIORef' counter f
-    redraw container counter assembly envs running
-    )
 
 createIO :: Environment -> Bool -> IO (VBox, (Bool) -> IO String)
 createIO env running = do
@@ -215,6 +110,66 @@ createIO env running = do
     stdin >|>> (createFrame "Stdin") >>|> vbox
     (createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) False) >>|> vbox
     return (vbox, getTextViewsText stdin)
+
+
+createToolbarMenu :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> (Bool -> IO String) -> (Bool -> IO String) -> IO Toolbar
+createToolbarMenu container counter assembly envs running assemblySource stdinSource = do
+    playBtn <- createPlayBtn running (\_ -> do
+            resetCounter counter
+            stdin <- (stdinSource False) >>= strToInts
+            assembly' <- assemblySource False
+            env <- makeEnvFromAss assembly' stdin
+            envs' <- getFullProgEnv env
+            redraw container counter assembly' envs' True
+        )
+    stopBtn <- createStopBtn running (\_ -> do
+            resetCounter counter
+            redraw container counter assembly envs False
+        )
+    nextBtn <- createNextBtn running (\_ -> do
+            modifyIORef' counter (changeWithPredicate (< (length envs)) (+ 1))
+            redraw container counter assembly envs True
+        )
+    previousBtn <- createPreviousBtn running (\_ -> do
+            modifyIORef' counter (changeWithPredicate (>= 0) (flip (-) 1))
+            redraw container counter assembly envs True
+        )
+    counterBtn <- createCounterBtn counter
+    createToolbar (toToolItem <$> [playBtn, stopBtn, previousBtn, counterBtn, nextBtn])
+
+createPlayBtn :: Bool -> (() -> IO ()) -> IO ToolButton
+createPlayBtn running f = createToolbarButtonFromIcon "media-playback-start" "media-playback-start-symbolic" running f
+
+createStopBtn :: Bool -> (() -> IO ()) -> IO ToolButton
+createStopBtn running f = createToolbarButtonFromIcon "media-playback-stop" "media-playback-stop-symbolic" (running == False) f
+
+createNextBtn :: Bool -> (() -> IO ()) -> IO ToolButton
+createNextBtn running f = createToolbarButtonFromIcon "go-next" "go-next-symbolic" (running == False) f
+
+createPreviousBtn :: Bool -> (() -> IO ()) -> IO ToolButton
+createPreviousBtn running f = createToolbarButtonFromIcon "go-previous" "go-previous-symbolic" (running == False) f
+
+createCounterBtn :: IORef Int -> IO ToolButton
+createCounterBtn counter = do
+    counter' <- (readIORef counter) >>= (\num -> return (show num))
+    counterEntry <- entryNew
+    entrySetText counterEntry counter'
+    entrySetWidthChars counterEntry 4
+    btn <- toolButtonNew (Just counterEntry) (Nothing :: Maybe String)
+    widgetSetSensitive btn False
+    return btn
+
+createToolbarButtonFromStock :: StockId -> Bool -> (() -> IO ()) -> IO ToolButton
+createToolbarButtonFromStock stockId disabled f = do
+    case disabled of
+        True  -> createToolButtonFromStock stockId True Nothing
+        False -> createToolButtonFromStock stockId False (Just f)
+
+createToolbarButtonFromIcon :: String -> String -> Bool -> (() -> IO ()) -> IO ToolButton
+createToolbarButtonFromIcon iconActive iconDisabled disabled f = do
+    case disabled of
+        True  -> createToolButtonFromIcon iconDisabled True Nothing
+        False -> createToolButtonFromIcon iconActive False (Just f)
 
 getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
 getTextViewsText textView includeHidden = do
