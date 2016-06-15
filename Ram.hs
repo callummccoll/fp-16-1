@@ -21,21 +21,26 @@ createRamAndRegisters env running = do
 
 getRamFromArray :: Environment -> Bool -> (Array Int Cell) -> IO Frame
 getRamFromArray env running ram = do
-    registers <- extractRegisters env
-    factory <- case running of
-        True -> return (createRowWithColouredRegister
-                (ePC env, Color 65535 64250 55769)
-                (eSP env, Color 55769 65535 64250)
-            )
-        False -> return (createRowWithColouredRegister
-                (ePC env, Color 65535 65535 65535)
-                (eSP env, Color 65535 65535 65535)
-            )
+    pcColor <- case running of
+        True -> return (Color 65535 64250 55769)
+        False -> return (Color 65535 65535 65535)
+    spColor <- case running of
+        True -> return (Color 55769 65535 64250)
+        False -> return (Color 65535 65535 65535)
+    registers <- extractRegisters env pcColor spColor
+    factory <- return (createRowWithColouredRegister
+            (ePC env, pcColor)
+            (eSP env, spColor)
+        )
     createRam (extractRowData (elems ram) 0) factory registers
 
-extractRegisters :: Environment -> IO [(String, String)]
-extractRegisters env = do
-    return [("A", showCVal (eA env)), ("SP", show (eSP env)), ("PC", show (ePC env)) ]
+extractRegisters :: Environment -> Color -> Color -> IO [(String, String, Color)]
+extractRegisters env pcColor spColor = do
+    return [
+            ("A", showCVal (eA env), Color 65535 65535 65535),
+            ("SP", show (eSP env), spColor),
+            ("PC", show (ePC env), pcColor)
+        ]
 
 extractRowData :: [Cell] -> Int -> [RowData]
 extractRowData cs pos = case cs of
@@ -51,7 +56,7 @@ createRowWithColouredRegister (pc, pcColor) (sp, spColor) (row, label, content)
     | row == sp = createRow (row, label, content) spColor
     | otherwise = createRow (row, label, content) (Color 65535 65535 65535)
 
-createRam :: [RowData] -> RowFactory -> [(String, String)] -> IO Frame
+createRam :: [RowData] -> RowFactory -> [(String, String, Color)] -> IO Frame
 createRam rs rowFactory registers = do
     hbox  <- hBoxNew False 10
     (createRamTable rs rowFactory) >>|> hbox <<|<< (createRegisters registers)
@@ -98,18 +103,18 @@ createRow (row, label, content) color = do
         >>|>> (frameNew)
     return (row, rowCell, label, content)
 
-createRegisters :: [(String, String)] -> IO VBox
+createRegisters :: [(String, String, Color)] -> IO VBox
 createRegisters registers = do
     vbox  <- vBoxNew False 10
     addRegisters vbox (createRegister <$> registers)
 
 
-createRegister :: (String, String) -> IO HBox
-createRegister (register, content) = do
+createRegister :: (String, String, Color) -> IO HBox
+createRegister (register, content, color) = do
     hbox     <- hBoxNew False 10
     frame    <- frameNew
     eventBox <- eventBoxNew
-    widgetModifyBg eventBox StateNormal (Color 65535 65535 65535)
+    widgetModifyBg eventBox StateNormal color
     (labelNew (Just content)) >>|> eventBox >>|> frame
     (labelNew (Just register)) >>|> hbox
     frame >|> hbox
