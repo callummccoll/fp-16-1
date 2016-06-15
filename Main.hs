@@ -137,16 +137,16 @@ createToolbarMenu container counter assembly envs running assemblySource stdinSo
     createToolbar (toToolItem <$> [playBtn, stopBtn, previousBtn, counterBtn, nextBtn])
 
 createPlayBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createPlayBtn running f = createToolbarButton stockMediaPlay running f
+createPlayBtn running f = createToolbarButtonFromIcon "media-playback-start" "media-playback-start-symbolic" running f
 
 createStopBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createStopBtn running f = createToolbarButton stockMediaStop (running == False) f
+createStopBtn running f = createToolbarButtonFromIcon "media-playback-stop" "media-playback-stop-symbolic" (running == False) f
 
 createNextBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createNextBtn running f = createToolbarButton stockGoForward (running == False) f
+createNextBtn running f = createToolbarButtonFromIcon "go-next" "go-next-symbolic" (running == False) f
 
 createPreviousBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createPreviousBtn running f = createToolbarButton stockGoBack (running == False) f
+createPreviousBtn running f = createToolbarButtonFromIcon "go-previous" "go-previous-symbolic" (running == False) f
 
 createCounterBtn :: IORef Int -> IO ToolButton
 createCounterBtn counter = do
@@ -158,11 +158,17 @@ createCounterBtn counter = do
     widgetSetSensitive btn False
     return btn
 
-createToolbarButton :: StockId -> Bool -> (() -> IO ()) -> IO ToolButton
-createToolbarButton stockId disabled f = do
+createToolbarButtonFromStock :: StockId -> Bool -> (() -> IO ()) -> IO ToolButton
+createToolbarButtonFromStock stockId disabled f = do
     case disabled of
         True  -> createToolButtonFromStock stockId True Nothing
         False -> createToolButtonFromStock stockId False (Just f)
+
+createToolbarButtonFromIcon :: String -> String -> Bool -> (() -> IO ()) -> IO ToolButton
+createToolbarButtonFromIcon iconActive iconDisabled disabled f = do
+    case disabled of
+        True  -> createToolButtonFromIcon iconDisabled True Nothing
+        False -> createToolButtonFromIcon iconActive False (Just f)
 
 getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
 getTextViewsText textView includeHidden = do
