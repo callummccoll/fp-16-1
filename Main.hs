@@ -90,7 +90,7 @@ createDrawing container counter assembly envs running = do
     (ioVbox, stdinTextGetter) <- createIO env running
     ioVbox >|> hbox
     stdin <- (stdinTextGetter False) >>= strToInts
-    createToolbarMenu container counter assembly stdin running >>|> vbox
+    createToolbarMenu container counter assembly envs running stdin >>|> vbox
     hbox >|> vbox >>|> container
     widgetShowAll container
 
@@ -111,23 +111,54 @@ createIO env running = do
     return (vbox, getTextViewsText stdin)
 
 
-createToolbarMenu :: (ContainerClass c) => c -> IORef Int -> String -> [Int] -> Bool -> IO Toolbar
-createToolbarMenu container counter assembly stdin running = do
+createToolbarMenu :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> [Int] -> IO Toolbar
+createToolbarMenu container counter assembly envs running stdin = do
     playBtn <- createPlayBtn running (\_ -> do
-            envs <- (makeEnvFromAss assembly stdin) >>= getFullProgEnv
             resetCounter counter
             redraw container counter assembly envs True
         )
-    bar <- createToolbar (toToolItem <$> [playBtn])
+    stopBtn <- createStopBtn running (\_ -> do
+            resetCounter counter
+            redraw container counter assembly envs False
+        )
+    nextBtn <- createNextBtn running (\_ -> do
+            modifyIORef' counter (changeWithPredicate (< (length envs)) (+ 1))
+            redraw container counter assembly envs True
+        )
+    previousBtn <- createPreviousBtn running (\_ -> do
+            modifyIORef' counter (changeWithPredicate (>= 0) (flip (-) 1))
+            redraw container counter assembly envs True
+        )
+    counterBtn <- createCounterBtn counter
+    bar <- createToolbar (toToolItem <$> [playBtn, stopBtn, previousBtn, counterBtn, nextBtn])
     return bar
 
 createPlayBtn :: Bool -> (() -> IO ()) -> IO ToolButton
 createPlayBtn running f = createToolbarButton stockMediaPlay running f
 
+createStopBtn :: Bool -> (() -> IO ()) -> IO ToolButton
+createStopBtn running f = createToolbarButton stockMediaStop (running == False) f
+
+createNextBtn :: Bool -> (() -> IO ()) -> IO ToolButton
+createNextBtn running f = createToolbarButton stockGoForward (running == False) f
+
+createPreviousBtn :: Bool -> (() -> IO ()) -> IO ToolButton
+createPreviousBtn running f = createToolbarButton stockGoBack (running == False) f
+
+createCounterBtn :: IORef Int -> IO ToolButton
+createCounterBtn counter = do
+    counter' <- (readIORef counter) >>= (\num -> return (show num))
+    counterEntry <- entryNew
+    entrySetText counterEntry counter'
+    entrySetWidthChars counterEntry 4
+    btn <- toolButtonNew (Just counterEntry) (Nothing :: Maybe String)
+    widgetSetSensitive btn False
+    return btn
+
 createToolbarButton :: StockId -> Bool -> (() -> IO ()) -> IO ToolButton
-createToolbarButton stockId running f = do
-    case running of
-        True  -> createToolButtonFromStock stockId False Nothing
+createToolbarButton stockId disabled f = do
+    case disabled of
+        True  -> createToolButtonFromStock stockId True Nothing
         False -> createToolButtonFromStock stockId False (Just f)
 
 getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
