@@ -32,18 +32,18 @@ We did stuff. And more stuff, then stuff happened.
 \listoffigures
 
 \section{Introduction}
-The goal of this project was to create a program that could compile, execute and displayed a C program. It could then be used to go step-by-step through a C program in order to show how the memory and registers are effected by each line of C code. In order to learn functional programming and Mash as a template, this program was created using Haskell. The project could be divided into 5 separate sections, the C parser, the assembly parser, C to assembly code generation, the emulator and the GUI. These were then allocated to three groups, one group would create the C Parser, another the Assembly Parser and Symbol Table, and the last group the Emulator and GUI. The Code generation which converts a C Parse tree to an Assembly Parse tree was not assigned to any group. A diagram of this can be see in Figure \ref{fig:ProjectDiagram}.
+The goal of this project was to create a program that could compile, execute and displaye a C program. It could then be used to go step-by-step through a C program in order to show how the memory and registers are effected by each line of C code. In order to learn functional programming and Mash as a template, this program was created using Haskell. The project could be divided into 5 separate sections, the C parser, the assembly parser, C to assembly code generation, the emulator and the GUI. These were then allocated to three groups, one group would create the C Parser, another the Assembly Parser and Symbol Table, and the last group the Emulator and GUI. The Code generation which converts a C Parse tree to an Assembly Parse tree was not assigned to any group. A diagram of this can be see in Figure \ref{fig:ProjectDiagram}.
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \includegraphics[width=300px]{ProjectDiagram}
 \caption{Project diagram showing all the main parts and group allocations.}
 \label{fig:ProjectDiagram}
 \end{figure}
 
-The program that this project created is to be used as a learning tool to help teach C programming. C is a difficult language when starting as there are multiple ways to do the same thing in the language, but some ways are more 'right' than others. The compilers can also be very lenient and compile and run code that is not correct, leading to problems where code ends up running differently on different systems. By having a program that can go step-by-step through a C program, it will be much easier to show why errors are, and explain to students why a program is acting in that way.
+The program that this project created is to be used as a learning tool to help teach C programming. C is a difficult language when starting as there are multiple ways to do the same thing in the language, but some ways are more 'right' than others. The compilers can also be very lenient and compile and run code that is not correct, leading to problems where code ends up running differently on different systems. By having a program that can go step-by-step through a C program, it will be much easier to show where errors are, and explain to students why a program is acting in that way.
 
-Obviously the C language is very vast, so only a small subset was chosen to a implemented for this project. All variables are either an Int or a pointer, there are no structs and everything must be contained within a single file. This allowed the assembler and emulator to be much simpler and be possible to complete in the time we had.
+Obviously the C language is very vast, so only a small subset was chosen to be implemented for this project. All variables are either an Int or a pointer, there are no structs and everything must be contained within a single file. This allowed the assembler and emulator to be much simpler and made it possible to complete in the time we had.
 
 Our group was the Visuals Group and was assigned to create the Emulator and GUI. Our project was significantly different from the other two groups which were creating parsers. In general, Callum was responsible for creating the GUI and Andrew created the Emulator and Environment. There was overlap between those sections when designing the programming interface for the emulator and environment, however most of the work was separate. Since the emulator uses an assembly parse tree, we also had to work with the group creating that in order to connect them together.
 
@@ -54,6 +54,9 @@ Describe process / design
 
 \subsection{Process}
 
+As state previously Andrew was responsible for the Emulation and Callum was responsible for the GUI.  In order to easily share and work together a Git repository was set up.  This was essential as the application needed to be tested on Windows, Unix and Posix and each group member only had access to a subset of these platforms.  Therefore there were many times in the project where a group member would ask the other to pull the repository and verify that the behaviour exhibited by the program was correct.
+
+Another benefit for using the repository was that it gave everyone developing the latest changes so it was known immediately if something that the other had changed had inadvertently affected the others work.  Overall the Git repository gave each developer the freedom to work individually without the worry of having to merge two separate implementation at a later date.
 
 \subsection{Emulator}
 
@@ -65,15 +68,33 @@ The first test was using a HTML page with a small amount of JavaScript to make i
 
 The next step was to test GTK3, and an example application was also made for it. This test program used Glade to structure the application window and GTK3 to draw it to the screen. A screenshot of the test program can be seen in figure \ref{fig:GTK3Test}. As a demo, it had very limited interactivity, allowing you to  step through a handwritten list of program states and nothing could be modified. It did demonstrate that GTK3 would indeed be suitable for the project, however the use of Glade to position elements on the window was not very useful as most of the windows ended up being built using code.
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \includegraphics[width=300px]{GTK3TestScreenshot}
 \caption{Screenshot of GTK3 test program.}
 \label{fig:GTK3Test}
 \end{figure}
 
-\subsubsection{ ? }
-- Write stuff here Callum.
+\subsubsection{The Final Product}
+While using Glade supplied a very nice proof-of-concept implementation, it became quite difficult to manage the dynamic nature of the program.  Therefore it was decided that attempting to complete the project using Glade was dropped for an entirely code based approach.
+
+The final product follows from the proof-of-concept implementation but does of course emulate the assembly source code that it is given.  Unfortunately the C parsing was not completed so it was decided to abandon the C frame which is shown in the proof-of-concept implementation for more screen real estate.  The GUI has a main menu bar at the top which can be used to open other assembly source files.  Below the menu is a tool bar which presents play, stop, previous and next buttons.  This allows us to modify the assembly code and then run it much like other IDE's allow you to do.  Figures \ref{fig:screen_shot} and \ref{fig:screen_shot_running} show the final product when the assembly is editable and when it is begin emulated.
+
+The GUI runs in two states.  Firstly when the GUI first launches it is in "edit" mode.  This means that the assembly source code and stdin are editable.  Once the user wants to run the emulation they then press the "play" button.  This runs the emulation.  The user is then able to step through the program.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=300px]{screen_shot}
+    \caption{Screenshot of the Final Product}
+    \label{fig:screen_shot}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=300px]{screen_shot_running}
+    \caption{Screenshot of the Final Product Running}
+    \label{fig:screen_shot_running}
+\end{figure}
 
 \section{Design Details}
 Details about the design.
@@ -171,7 +192,7 @@ You're finally done and should be able to compile this project.
 \input{../Emulation.lhs}
 
 \subsection{GUI}
-- Callum fill this.
+GTK3 runs everything through a main loop.  Therefore it uses an event-driven paradigm where the program mostly does nothing until certain events are triggered.  The "main loop" is responsible for waiting for user input and invoking the appropriate listener functions.  It is very important to note that the main loop is blocking while it waits for user input.  Therefore you must do everything based on an event.
 
 \section{Results, evidence of what works}
 Screenshots of the GUI and output of printing an environment I guess.
