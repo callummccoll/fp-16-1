@@ -90,7 +90,8 @@ createDrawing container counter assembly envs running = do
     (ioVbox, stdinTextGetter) <- createIO env running
     ioVbox >|> hbox
     stdin <- (stdinTextGetter False) >>= strToInts
-    createToolbarMenu container counter assembly envs running (getTextViewsText assemblyTextView) stdinTextGetter >>|> vbox
+    bar <- createToolbarMenu container counter assembly envs running (getTextViewsText assemblyTextView) stdinTextGetter
+    boxPackStart vbox bar PackNatural 0
     hbox >|> vbox >>|> container
     widgetShowAll container
 
