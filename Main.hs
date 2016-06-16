@@ -22,6 +22,7 @@ import System.Environment
 main :: IO ()
 main = do
     initGUI
+    preloadIcons
     -- A counter which is incremented when the button is pressed.
     counter <- newIORef 0
     -- The main window.
@@ -49,6 +50,21 @@ main = do
     widgetShowAll window
     -- Start the application.
     mainGUI
+
+preloadIcons :: IO ()
+preloadIcons = do
+    defaultTheme <- iconThemeGetDefault
+    hasPlay <- iconThemeHasIcon defaultTheme "media-playback-start"
+    hasStop <- iconThemeHasIcon defaultTheme "media-playback-stop"
+    hasNext <- iconThemeHasIcon defaultTheme "go-next"
+    hasPrevious <- iconThemeHasIcon defaultTheme "go-previous"
+    case hasPlay && hasStop && hasNext && hasPrevious of
+        True -> return ()
+        False -> do
+            factory <- iconFactoryNew
+            iconFactoryAddDefault factory
+            putStrLn "test"
+            return ()
 
 redrawFromFile :: (ContainerClass c) => c -> IORef Int -> String -> IO ()
 redrawFromFile container counter fileName = do
