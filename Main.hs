@@ -4,6 +4,7 @@ import Assembly
 import Emulation
 import Environment
 import Helpers
+import Icons
 import Menus
 import Presentation
 import Ram
@@ -50,21 +51,6 @@ main = do
     widgetShowAll window
     -- Start the application.
     mainGUI
-
-preloadIcons :: IO ()
-preloadIcons = do
-    defaultTheme <- iconThemeGetDefault
-    hasPlay <- iconThemeHasIcon defaultTheme "media-playback-start"
-    hasStop <- iconThemeHasIcon defaultTheme "media-playback-stop"
-    hasNext <- iconThemeHasIcon defaultTheme "go-next"
-    hasPrevious <- iconThemeHasIcon defaultTheme "go-previous"
-    case hasPlay && hasStop && hasNext && hasPrevious of
-        True -> return ()
-        False -> do
-            factory <- iconFactoryNew
-            iconFactoryAddDefault factory
-            putStrLn "test"
-            return ()
 
 redrawFromFile :: (ContainerClass c) => c -> IORef Int -> String -> IO ()
 redrawFromFile container counter fileName = do
@@ -154,16 +140,16 @@ createToolbarMenu container counter assembly envs running assemblySource stdinSo
     createToolbar (toToolItem <$> [playBtn, stopBtn, previousBtn, counterBtn, nextBtn])
 
 createPlayBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createPlayBtn running f = createToolbarButtonFromIcon "media-playback-start" "media-playback-start-symbolic" running f
+createPlayBtn running f = createToolbarButtonFromStock playButton playButtonDisabled running f
 
 createStopBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createStopBtn running f = createToolbarButtonFromIcon "media-playback-stop" "media-playback-stop-symbolic" (running == False) f
+createStopBtn running f = createToolbarButtonFromStock stopButton stopButtonDisabled (running == False) f
 
 createNextBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createNextBtn running f = createToolbarButtonFromIcon "go-next" "go-next-symbolic" (running == False) f
+createNextBtn running f = createToolbarButtonFromStock nextButton nextButtonDisabled (running == False) f
 
 createPreviousBtn :: Bool -> (() -> IO ()) -> IO ToolButton
-createPreviousBtn running f = createToolbarButtonFromIcon "go-previous" "go-previous-symbolic" (running == False) f
+createPreviousBtn running f = createToolbarButtonFromStock previousButton previousButtonDisabled (running == False) f
 
 createCounterBtn :: IORef Int -> IO ToolButton
 createCounterBtn counter = do
@@ -175,17 +161,11 @@ createCounterBtn counter = do
     widgetSetSensitive btn False
     return btn
 
-createToolbarButtonFromStock :: StockId -> Bool -> (() -> IO ()) -> IO ToolButton
-createToolbarButtonFromStock stockId disabled f = do
+createToolbarButtonFromStock :: StockId -> StockId-> Bool -> (() -> IO ()) -> IO ToolButton
+createToolbarButtonFromStock iconActive iconDisabled disabled f = do
     case disabled of
-        True  -> createToolButtonFromStock stockId True Nothing
-        False -> createToolButtonFromStock stockId False (Just f)
-
-createToolbarButtonFromIcon :: String -> String -> Bool -> (() -> IO ()) -> IO ToolButton
-createToolbarButtonFromIcon iconActive iconDisabled disabled f = do
-    case disabled of
-        True  -> createToolButtonFromIcon iconDisabled True Nothing
-        False -> createToolButtonFromIcon iconActive False (Just f)
+        True  -> createToolButtonFromStock iconDisabled True Nothing
+        False -> createToolButtonFromStock iconActive False (Just f)
 
 getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
 getTextViewsText textView includeHidden = do

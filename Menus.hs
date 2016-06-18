@@ -63,15 +63,3 @@ createToolButtonFromStock stockId disabled f = do
             onToolButtonClicked btn $ do
                 f' ()
             return btn
-
-createToolButtonFromIcon :: String -> Bool -> Maybe (() -> IO ()) -> IO ToolButton
-createToolButtonFromIcon icon disabled f = do
-    image <- imageNewFromIconName icon IconSizeMenu
-    btn <- toolButtonNew (Just image) (Nothing :: Maybe String)
-    widgetSetSensitive btn (disabled == False)
-    case f of
-        Nothing -> return btn
-        Just f' -> do
-            onToolButtonClicked btn $ do
-                f' ()
-            return btn
