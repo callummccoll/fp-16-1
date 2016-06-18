@@ -6,6 +6,7 @@ import Environment
 import Helpers
 import Icons
 import Menus
+import Operators
 import Presentation
 import Ram
 

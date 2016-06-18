@@ -2,6 +2,7 @@ module Ram (createRamAndRegisters) where
 
 import Environment
 import Helpers
+import Operators
 import Presentation
 
 import "gtk3" Graphics.UI.Gtk
