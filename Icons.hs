@@ -7,7 +7,6 @@ import System.Directory
 
 preloadIcons :: IO ()
 preloadIcons = do
-    defaultTheme <- iconThemeGetDefault
     dir <- assetsDirectory
     icons <- allCustomIcons
     preloadIconsFromDirectory dir "svg" icons
