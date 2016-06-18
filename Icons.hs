@@ -7,12 +7,9 @@ import System.Directory
 
 preloadIcons :: IO ()
 preloadIcons = do
-    putStrLn "hello"
     defaultTheme <- iconThemeGetDefault
     dir <- assetsDirectory
-    putStrLn dir
     icons <- allCustomIcons
-    putStrLn (show icons)
     preloadIconsFromDirectory dir "svg" icons
 
 preloadIconsFromDirectory :: FilePath -> String -> [StockId] -> IO ()
@@ -29,7 +26,6 @@ preloadIconFromDirectory dir ext icon = do
 
 preloadIcon :: FilePath -> StockId -> IO ()
 preloadIcon path icon = do
-    putStrLn ("preload " ++ (read $ show icon) ++ ": " ++ path)
     factory <- iconFactoryNew
     set <- (imageNewFromFile path) >>= imageGetPixbuf >>= iconSetNewFromPixbuf
     iconFactoryAdd factory icon set
