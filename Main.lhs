@@ -1,9 +1,6 @@
-This module provides the main entry point of the application.
+\label{source:Main}
 
-This module is therefore responsible for setting up the gui and drawing
-performing the actual logic of the program.
-
-This modules only contains application specific code and is not reusable at all.
+\highlighttt{Main} provides the main entry point of the application.  It is also responsible for setting up the GUI and performing the actual logic of the program.
 
 \begin{code}
 module Main (main) where
@@ -31,21 +28,13 @@ import Data.List
 import System.Environment
 \end{code}
 
-Setup the GUI and run gtks main event loop.
+\noindent The \highlighttt{main} function sets up the GUI and run gtks main event loop.
 
-The GUI consists of VBox which consists of a MenuBar and a container.
+The GUI consists of a VBox which contains a MenuBar and a container.  This container contains all of the GUI elements that change when the user progresses through the emulation.  Therefore everything in the container is redrawn on a regular basis.
 
-This container contains all of the GUI elements that change when the user
-progresses through the emulation.  For instance if the user wishes to go to the
-next line in the code then the ram would change as the current instruction would
-have been evaluated and would have effected the values within the RAM.
+The application starts with the emulation not running and allows the user to edit the stdin and assembly source code before they opt to run the emulation. Once the emulation has started running then the stdin and assembly source code widgets become disabled.
 
-Therefore everything in the container is redrawn on a regular basis.
-
-The application starts with the emulation not running and allows the user to
-edit the stdin and assembly source code before they opt to run the emulation.
-Once the emulation has started running then the stdin and assembly source code
-widgets become disabled, therefore they don't allow the user to make changes.
+Throughout the program there are several operators that are used to add widgets to containers.  Please look at the Operators module (\ref{source:Operators}) for more information.
 
 \begin{code}
 main :: IO ()

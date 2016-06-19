@@ -1,5 +1,6 @@
-This modules defines several operators which provide a nicer syntax and the
-ability to chain common operations for gtk applications.
+\label{source:Operators}
+
+The \highlighttt{Operators} module defines several operators which provide chaining and a nicer syntax for common gtk operations.
 
 \begin{code}
 module Operators where
@@ -7,8 +8,7 @@ module Operators where
 import "gtk3" Graphics.UI.Gtk
 \end{code}
 
-Add the given widget to the given container.
-
+\noindent \highlighttt{widget >|> container} adds the given widget to the given container.  This function returns the container wrapped in the IO monad.  By doing this we can chain these operations and add multiple widgets to multiple containers on a single line.
 \begin{code}
 infixl 2 >|>
 (>|>) :: (ContainerClass c, WidgetClass w) => w -> c -> IO c
@@ -17,10 +17,7 @@ widget >|> container = do
     return container
 \end{code}
 
-Add the given widget to the given container that is wrapped in the IO monad.  
-This function returns the container wrapped in the IO monad.  By doing this we
-can chain these operations and add multiple widgets to multiple containers on a
-single line.
+\noindent Add the given widget to the given container that is wrapped in the IO monad.  This function returns the container wrapped in the IO monad.  By doing this we can chain these operations and add multiple widgets to multiple containers on a single line.
 
 \begin{code}
 infixl 2 >|>>
@@ -31,10 +28,7 @@ widget >|>> container = do
     return c
 \end{code}
 
-Add the given widget that is wrapped in the IO monad to the given container.
-This function returns the container wrapped in the IO monad.  By doing this we
-can chain these operations and add multiple widgets to multiple containers on a
-single line.
+\noindent Add the given widget that is wrapped in the IO monad to the given container.  This function returns the container wrapped in the IO monad.  By doing this we can chain these operations and add multiple widgets to multiple containers on a single line.
 
 \begin{code}
 infixl 2 >>|>
@@ -44,10 +38,7 @@ widget >>|> container = do
     return container
 \end{code}
 
-Add the given widget which is wrapped in the IO monad to the given container
-which is also wrapped in the IO monad.  This function returns the container
-wrapped in the IO monad.  By doing this we can chain these operations and add
-multiple widgets to multiple containers on a single line.
+\noindent Add the given widget which is wrapped in the IO monad to the given container which is also wrapped in the IO monad.  This function returns the container wrapped in the IO monad.  By doing this we can chain these operations and add multiple widgets to multiple containers on a single line.
 
 \begin{code}
 infixl 2 >>|>>

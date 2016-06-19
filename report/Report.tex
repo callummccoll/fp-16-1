@@ -8,10 +8,34 @@
 \usepackage{graphicx}
 \usepackage[pdftex, backref, colorlinks, bookmarksnumbered=true]{hyperref}
 
-\DefineVerbatimEnvironment{code}{Verbatim}{}
+\usepackage{listings}
+\lstloadlanguages{Haskell}
+\lstnewenvironment{code}
+{\lstset{}%
+    \csname lst@SetFirstLabel\endcsname}
+{\csname lst@SaveFirstLabel\endcsname}
+
+%\DefineVerbatimEnvironment{code}{Verbatim}{}
 
 \newcommand{\highlight}[1]{\colorbox{yellow}{#1}}
 \newcommand{\highlighttt}[1]{\highlight{{\tt#1}}}
+\newcommand{\lhs}[1]{{\lstset{
+            basicstyle=\small\ttfamily,
+            flexiblecolumns=false,
+            basewidth={0.5em,0.45em},
+            literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
+            {>}{{$>$}}1 {<}{{$<$}}1 {\\}{{$\lambda$}}1
+            {\\\\}{{\char`\\\char`\\}}1
+            {->}{{$\rightarrow$}}2 {>=}{{$\geq$}}2 {<-}{{$\leftarrow$}}2
+            {<=}{{$\leq$}}2 {=>}{{$\Rightarrow$}}2 
+            {\ .}{{$\circ$}}2 {\ .\ }{{$\circ$}}2
+            {>>}{{>>}}2 {>>=}{{>>=}}3
+            {|}{{$\mid$}}1
+            {>|>}{{>|>}}3 {>>|>}{{>>|>}}4 {>>|>>}{{>>|>>}}5 {>|>>}{{>|>>}}4
+            {<|<}{{<|<}}3 {<<|<}{{<<|<}}4 {<<|<<}{{<<|<<}}5 {<|<<}{{<|<<}}4
+        }
+        #1
+}}
 
 \long\def\ignore#1{}
 
@@ -218,7 +242,32 @@ You're finally done and should be able to compile this project.
 \input{../Emulation.lhs}
 
 \subsection{GUI}
+
+\subsubsection{GTK3}
+
 GTK3 runs everything through a main loop.  Therefore it uses an event-driven paradigm where the program mostly does nothing until certain events are triggered.  The "main loop" is responsible for waiting for user input and invoking the appropriate listener functions.  It is very important to note that the main loop is blocking while it waits for user input.  Therefore you must do everything based on an event.
+
+It is important to understand how GTK3 organizes its objects so we are going to talk a little about how GTK works.  GTK3 is a c library but the gtk2hs project has organized everything into a type class hierarchy.  As such the \highlighttt{GObjectClass} is the type class that every glib object conforms to.  The next one down is the \highlighttt{WidgetClass}.  Everything that can be placed on the stage conforms to \highlighttt{WidgetClass}.
+
+If an object conforms to the \highlighttt{ContainerClass} then they are capable of containing other widgets.  \highlighttt{VBox} is a container that organizes its children into a vertical layout.  Where the first child is placed vertically above the second.  \highlighttt{HBox} is similar but it instead organizes its children in a horizontal layout.  The final object that is worth mentioning is \highlighttt{Frame}.  \highlighttt{Frame} is a container that displayes a rounded cornered box with a title.
+
+\subsubsection{Structure}
+
+The GUI implementation is separated into several modules, figure shows how each of these modules interact with each other.
+
+\lhs{
+    \subsubsection{Operators}
+    \input{../Operators.lhs}
+    
+    \subsubsection{Main}
+    \input{../Main.lhs}
+    
+    \subsubsection{Ram}
+    \input{../Ram.lhs}
+    
+    \subsubsection{Presentation}
+    \input{../Presentation.lhs}
+}
 
 \section{Results, evidence of what works}
 Screenshots of the GUI and output of printing an environment I guess.
