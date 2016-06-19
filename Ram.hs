@@ -15,40 +15,39 @@ type Row = (Int, Frame, Frame, Frame)
 type RowFactory = RowData -> IO Row
 
 createRamAndRegisters:: Environment -> Bool -> IO Frame
-createRamAndRegisters env running = do
-    case (eRAM env) of
-        Left ram  -> (freeze ram) >>= (getRamFromArray env running)
-        Right ram -> getRamFromArray env running ram
+createRamAndRegisters env running = case eRAM env of
+    Left ram  -> freeze ram >>= getRamFromArray env running
+    Right ram -> getRamFromArray env running ram
 
-getRamFromArray :: Environment -> Bool -> (Array Int Cell) -> IO Frame
+getRamFromArray :: Environment -> Bool -> Array Int Cell -> IO Frame
 getRamFromArray env running ram = do
-    pcColor <- case running of
-        True -> return (Color 65535 64250 55769)
-        False -> return (Color 65535 65535 65535)
-    spColor <- case running of
-        True -> return (Color 55769 65535 64250)
-        False -> return (Color 65535 65535 65535)
+    pcColor <-
+        if running then
+            return (Color 65535 64250 55769)
+        else
+            return (Color 65535 65535 65535)
+    spColor <- 
+        if running then
+            return (Color 55769 65535 64250)
+        else
+            return (Color 65535 65535 65535)
     registers <- extractRegisters env pcColor spColor
-    factory <- return (createRowWithColouredRegister
-            (ePC env, pcColor)
-            (eSP env, spColor)
-        )
+    let factory = createRowWithColouredRegister (ePC env, pcColor) (eSP env, spColor)
     createRam (extractRowData (elems ram) 0) factory registers
 
 extractRegisters :: Environment -> Color -> Color -> IO [(String, String, Color)]
-extractRegisters env pcColor spColor = do
-    return [
-            ("A", showCVal (eA env), Color 65535 65535 65535),
-            ("SP", show (eSP env), spColor),
-            ("PC", show (ePC env), pcColor)
-        ]
+extractRegisters env pcColor spColor = return [
+        ("A", showCVal (eA env), Color 65535 65535 65535),
+        ("SP", show (eSP env), spColor),
+        ("PC", show (ePC env), pcColor)
+    ]
 
 extractRowData :: [Cell] -> Int -> [RowData]
 extractRowData cs pos = case cs of
     [] -> []
     c : cs' -> case (cLabel c, cVal c) of
-        (l, Int c')  -> (pos, Just l, (show c')) : extractRowData cs' (pos + 1)
-        (l, Inst c') -> (pos, Just l, (showInstruction c')) : extractRowData cs' (pos + 1)
+        (l, Int c')  -> (pos, Just l, show c') : extractRowData cs' (pos + 1)
+        (l, Inst c') -> (pos, Just l, showInstruction c') : extractRowData cs' (pos + 1)
         _            -> (pos, Nothing, "") : extractRowData cs' (pos + 1)
 
 createRowWithColouredRegister :: (Int, Color) -> (Int, Color) -> RowData -> IO Row
@@ -60,13 +59,13 @@ createRowWithColouredRegister (pc, pcColor) (sp, spColor) (row, label, content)
 createRam :: [RowData] -> RowFactory -> [(String, String, Color)] -> IO Frame
 createRam rs rowFactory registers = do
     hbox  <- hBoxNew False 10
-    (createRamTable rs rowFactory) >>|> hbox <<|<< (createRegisters registers)
-    hbox >|>> (pad (5,5,5,5)) >>|>> (createFrame "Ram and Registers")
+    createRamTable rs rowFactory >>|> hbox <<|<< createRegisters registers
+    hbox >|>> pad (5,5,5,5) >>|>> createFrame "Ram and Registers"
 
 createRamTable :: [RowData] -> RowFactory -> IO Table
 createRamTable rs rowFactory = do
-    table <- (tableNew (length rs) 3 False)
-    rows <- return (rowFactory <$> rs)
+    table <- tableNew (length rs) 3 False
+    let rows = rowFactory <$> rs
     attachCellsToTable table rows
     return table
 
@@ -83,8 +82,8 @@ attachCellsToTable table rs = case rs of
 createRowCell :: Int -> IO Frame
 createRowCell row = do
     frame <- frameNew
-    (labelNew (Just (show row)))
-        >>|>> (padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1))
+    labelNew (Just (show row))
+        >>|>> padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1)
         >>|> frame
 
 createRow :: RowData -> Color -> IO Row
@@ -95,13 +94,13 @@ createRow (row, label, content) color = do
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal color
     widgetSetSizeRequest eventBox 80 (-1)
-    label <- (labelNew (label))
-        >>|>> (padWithAlignment (5, 5, 5, 5) (1, 0, 1, 1))
+    label <- labelNew label
+        >>|>> padWithAlignment (5, 5, 5, 5) (1, 0, 1, 1)
         >>|> labelFrame
-    content <- (labelNew (Just content))
-        >>|>> (pad (5, 5, 5, 5))
+    content <- labelNew (Just content)
+        >>|>> pad (5, 5, 5, 5)
         >>|> eventBox
-        >>|>> (frameNew)
+        >>|>> frameNew
     return (row, rowCell, label, content)
 
 createRegisters :: [(String, String, Color)] -> IO VBox
@@ -116,8 +115,8 @@ createRegister (register, content, color) = do
     frame    <- frameNew
     eventBox <- eventBoxNew
     widgetModifyBg eventBox StateNormal color
-    (labelNew (Just content)) >>|> eventBox >>|> frame
-    (labelNew (Just register)) >>|> hbox
+    labelNew (Just content) >>|> eventBox >>|> frame
+    labelNew (Just register) >>|> hbox
     frame >|> hbox
 
 addRegisters :: VBox -> [IO HBox] -> IO VBox
