@@ -33,21 +33,41 @@ import System.Environment
 
 Setup the GUI and run gtks main event loop.
 
+The GUI consists of VBox which consists of a MenuBar and a container.
+
+This container contains all of the GUI elements that change when the user
+progresses through the emulation.  For instance if the user wishes to go to the
+next line in the code then the ram would change as the current instruction would
+have been evaluated and would have effected the values within the RAM.
+
+Therefore everything in the container is redrawn on a regular basis.
+
+The application starts with the emulation not running and allows the user to
+edit the stdin and assembly source code before they opt to run the emulation.
+Once the emulation has started running then the stdin and assembly source code
+widgets become disabled, therefore they don't allow the user to make changes.
+
 \begin{code}
 main :: IO ()
 main = do
     initGUI
     preloadIcons
-    -- A counter which is incremented when the button is pressed.
+    -- A counter which represents the current position of the emulation.
     counter <- newIORef 0
     -- The main window.
     window <- windowNew
     windowSetDefaultSize window 1200 800
+    -- Get the assembly source code and all the environments from reading the
+    -- file in the command line arguments.
     (assembly, envs) <- environmentFromArgs
     -- Create the container and layout of the menu.
     vbox <- vBoxNew False 10
+    -- The container that contains all gui elements that must be redrawn when
+    -- the user progresses through the emulation.
     container <- vBoxNew False 0
+    -- The main menu, not to be confused with the tool bar.
     menubar <- createTheMenu window container counter 
+    -- Add the menu and the container to the VBox.
     boxPackStart vbox menubar PackNatural 5
     container >|> vbox >>|> window
     -- Draw the Window.
@@ -56,7 +76,7 @@ main = do
     window `on` deleteEvent $ tryEvent $ liftIO mainQuit
     -- Show the window
     widgetShowAll window
-    -- Start the application.
+    -- Start listening for events.
     mainGUI
 \end{code}
 
