@@ -9,17 +9,6 @@ import Operators
 import "gtk3" Graphics.UI.Gtk
 \end{code}
 
-Create a button that executes the given function when pressed.
-
-\begin{code}
-createButton :: (() -> IO Button) -> (() -> IO ()) -> IO Button
-createButton factory action = do
-    button <- factory ()
-    -- Increment the counter when the button is pressed.
-    button `on` buttonActivated $ action ()
-    return button
-\end{code}
-
 Create a text are within a frame.
 
 Takes a title, the content of the text area and whether the text area is
