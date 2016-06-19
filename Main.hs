@@ -31,27 +31,31 @@ main = do
     -- The main window.
     window <- windowNew
     windowSetDefaultSize window 1200 800
-    (file, stdin) <- fileFromArgs 
-    (assembly, envs) <- case file of
-        Nothing    -> return ("", listArray (0, 0) [initEnvF]) 
-        Just file' -> do
-            (assembly, env) <- environmentFromFile file' stdin
-            envs <- env >>= getFullProgEnv 
-            return (assembly, envs)
+    (assembly, envs) <- environmentFromArgs
     -- Create the container and layout of the menu.
     vbox <- vBoxNew False 10
-    content <- vBoxNew False 0
-    menubar <- createTheMenu window content counter 
+    container <- vBoxNew False 0
+    menubar <- createTheMenu window container counter 
     boxPackStart vbox menubar PackNatural 5
-    content >|> vbox >>|> window
+    container >|> vbox >>|> window
     -- Draw the Window.
-    redraw content counter assembly envs False
+    redraw container counter assembly envs False
     -- Stop the application when the window is closed.
     window `on` deleteEvent $ tryEvent $ liftIO mainQuit
     -- Show the window
     widgetShowAll window
     -- Start the application.
     mainGUI
+
+environmentFromArgs :: IO (String, Array Int Environment)
+environmentFromArgs = do
+    (file, stdin) <- fileFromArgs
+    case file of
+        Nothing -> return ("", listArray (0, 0) [initEnvF])
+        Just file' -> do
+            (assembly, env) <- environmentFromFile file' stdin
+            envs <- env >>= getFullProgEnv
+            return (assembly, envs)
 
 redrawFromFile :: (ContainerClass c) => c -> IORef Int -> String -> IO ()
 redrawFromFile container counter fileName = do
