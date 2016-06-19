@@ -2,11 +2,6 @@ Provdes some helper function that are used throughout the application.
 
 \begin{code}
 module Helpers where
-
-import Operators
-
-import "gtk3" Graphics.UI.Gtk
-import Data.IORef
 \end{code}
 
 Execute a function which changes the value of something based on the current
@@ -28,4 +23,9 @@ them and add new line characters in between them.  Returns the resulting string.
 \begin{code}
 toLines :: (Show a) => [a] -> String
 toLines xs = concat ((\x -> show x ++ "\n") <$> xs)
+\end{code}
+
+\begin{code}
+strToInts :: String -> IO [Int]
+strToInts str = return ((\s -> read s :: Int) <$> lines str)
 \end{code}

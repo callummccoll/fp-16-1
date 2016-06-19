@@ -66,6 +66,15 @@ createFrame s = do
     return frame
 \end{code}
 
+\begin{code}
+getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
+getTextViewsText textView includeHidden = do
+    buffer <- textViewGetBuffer textView
+    start <- textBufferGetStartIter buffer
+    end <- textBufferGetEndIter buffer
+    textBufferGetText buffer start end includeHidden
+\end{code}
+
 Create a new Alignment that is padded by the specified amount.  This function
 aligns all text to the left and to the top.
 

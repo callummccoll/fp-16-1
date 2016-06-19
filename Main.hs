@@ -69,9 +69,6 @@ fileFromArgs = do
         []            -> return (Nothing, [])
         file : stdins -> return (Just file, (\s -> read s :: Int) <$> (stdins >>= lines))
 
-strToInts :: String -> IO [Int]
-strToInts str = return ((\s -> read s :: Int) <$> lines str)
-
 environmentFromFile :: String -> [Int] -> IO (String, IO Environment)
 environmentFromFile filename stdin = do
    ass <- readFile filename
@@ -179,10 +176,3 @@ createToolbarButtonFromStock :: StockId -> StockId-> Bool -> (() -> IO ()) -> IO
 createToolbarButtonFromStock iconActive iconDisabled disabled f
     | disabled  = createToolButtonFromStock iconDisabled True Nothing
     | otherwise = createToolButtonFromStock iconActive False (Just f)
-
-getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
-getTextViewsText textView includeHidden = do
-    buffer <- textViewGetBuffer textView
-    start <- textBufferGetStartIter buffer
-    end <- textBufferGetEndIter buffer
-    textBufferGetText buffer start end includeHidden
