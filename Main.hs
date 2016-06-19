@@ -1,9 +1,9 @@
 module Main (main) where
 
 import Assembly
+import Containers
 import Emulation
 import Environment
-import GTKHelpers
 import Helpers
 import Icons
 import Menus

@@ -7,8 +7,8 @@ registers from the environment and puts them inside a Frame.
 \begin{code}
 module Ram (createRamAndRegisters) where
 
+import Containers
 import Environment
-import GTKHelpers
 import Helpers
 import Operators
 import Presentation

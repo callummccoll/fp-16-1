@@ -1,7 +1,8 @@
-Defines several functions which make creating and managing gtk objects easier.
+Defines several functions which make creating and managing gtk containers
+easier.
 
 \begin{code}
-module GTKHelpers where
+module Containers where
 
 import Operators
 
