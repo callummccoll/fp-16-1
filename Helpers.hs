@@ -15,8 +15,7 @@ createButton :: (() -> IO Button) -> (() -> IO ()) -> IO Button
 createButton factory action = do
     button <- factory ()
     -- Increment the counter when the button is pressed.
-    button `on` buttonActivated $ do
-        action ()
+    button `on` buttonActivated $ action ()
     return button
 
 createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
@@ -24,7 +23,7 @@ createTextAreaFrame title content editable = do
     frame <- case title of
                Nothing -> frameNew
                Just s  -> createFrame s
-    (createTextArea content editable) >>|>> (pad (5, 5, 5, 5)) >>|> frame
+    createTextArea content editable >>|>> pad (5, 5, 5, 5) >>|> frame
 
 createTextArea :: Maybe String -> Bool -> IO TextView
 createTextArea content editable = case content of
@@ -48,7 +47,7 @@ createFrame s = do
     return frame
 
 toLines :: (Show a) => [a] -> String
-toLines xs = concat ((\x -> (show x) ++ "\n") <$> xs)
+toLines xs = concat ((\x -> show x ++ "\n") <$> xs)
 
 pad :: (Int, Int, Int, Int) -> IO Alignment
 pad padding = padWithAlignment padding (0, 0, 1, 1)
