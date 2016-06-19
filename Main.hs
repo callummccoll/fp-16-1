@@ -41,7 +41,7 @@ main = do
     -- Create the container and layout of the menu.
     vbox <- vBoxNew False 10
     content <- vBoxNew False 0
-    menubar <- createMenu window (redrawFromFile content counter)
+    menubar <- createTheMenu window content counter 
     boxPackStart vbox menubar PackNatural 5
     content >|> vbox >>|> window
     -- Draw the Window.
@@ -114,6 +114,19 @@ createIO env running = do
     createTextAreaFrame (Just "Stdout") (Just (toLines $ eStdOut env)) False >>|> vbox
     return (vbox, getTextViewsText stdin)
 
+createTheMenu :: (ContainerClass c) => Window -> c -> IORef Int -> IO MenuBar
+createTheMenu window container counter = do
+    open <- createFileChooser
+        "Open..."
+        (Just "Choose Assembly File")
+        (Just window)
+        (redrawFromFile container counter)
+    separator <- separatorMenuItemNew
+    exit <- createMenuItem "Exit" (const mainQuit)
+    fileMenu <- createMenu [open, toMenuItem separator, exit]
+    file <- menuItemNewWithLabel "File"    
+    menuItemSetSubmenu file fileMenu
+    createMenuBar [file]
 
 createToolbarMenu :: (ContainerClass c) => c -> IORef Int -> String -> Array Int Environment -> Bool -> (Bool -> IO String) -> (Bool -> IO String) -> IO Toolbar
 createToolbarMenu container counter assembly envs running assemblySource stdinSource = do

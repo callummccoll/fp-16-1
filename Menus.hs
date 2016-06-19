@@ -5,23 +5,17 @@ import "gtk3" Graphics.UI.Gtk
 import Control.Applicative
 import Control.Monad.Trans
 
-createMenu :: Window -> (String -> IO ()) -> IO MenuBar
-createMenu window f = do
-    menubar <- menuBarNew
-    fileMenu <- menuNew
-    file <- menuItemNewWithLabel "File"
-    open <- menuItemNewWithLabel "Open..."
-    separator <- separatorMenuItemNew
-    exit <- menuItemNewWithLabel "Exit"
-    menuItemSetSubmenu file fileMenu
-    menuShellAppend fileMenu open
-    menuShellAppend fileMenu separator
-    menuShellAppend fileMenu exit
-    menuShellAppend menubar file
-    open `on` menuItemActivate $ do
+createMenuItem :: String -> (() -> IO ()) -> IO MenuItem
+createMenuItem label f = do
+    item <- menuItemNewWithLabel label
+    item `on` menuItemActivate $ f ()
+    return item
+
+createFileChooser :: String -> Maybe String -> Maybe Window -> (String -> IO ()) -> IO MenuItem
+createFileChooser label instructions window f = createMenuItem label (\_ -> do
         dialog <- fileChooserDialogNew
-            (Just "Choose Assmebly File")
-            (Just window)
+            instructions
+            window
             FileChooserActionOpen
             [("Open", ResponseAccept), ("Cancel", ResponseCancel)]
         widgetShow dialog
@@ -35,8 +29,26 @@ createMenu window f = do
             _ -> return ()
         widgetDestroy dialog
         return ()
-    exit `on` menuItemActivate $ liftIO mainQuit
-    return menubar
+    )
+
+createMenuBar :: (MenuItemClass i) => [i] -> IO MenuBar
+createMenuBar items = do
+    bar <- menuBarNew
+    attachItemsToMenu bar items
+    return bar
+
+createMenu :: (MenuItemClass i) => [i] -> IO Menu
+createMenu items = do
+    menu <- menuNew
+    attachItemsToMenu menu items
+    return menu
+
+attachItemsToMenu :: (MenuShellClass s, MenuItemClass i) => s -> [i] -> IO ()
+attachItemsToMenu menu items = case items of
+    [] -> return ()
+    item : items' -> do
+        menuShellAppend menu item
+        attachItemsToMenu menu items'
 
 createToolbar :: [ToolItem] -> IO Toolbar
 createToolbar items = do
