@@ -40,7 +40,7 @@ single line.
 infixl 2 >>|>
 (>>|>) :: (ContainerClass c, WidgetClass w) => IO w -> c -> IO c
 widget >>|> container = do
-    widget >>= (containerAdd container)
+    widget >>= containerAdd container
     return container
 \end{code}
 
@@ -53,8 +53,8 @@ multiple widgets to multiple containers on a single line.
 infixl 2 >>|>>
 (>>|>>) :: (ContainerClass c, WidgetClass w) => IO w -> IO c -> IO c
 widget >>|>> container = do
-    c <- container
     w <- widget
+    c <- container
     containerAdd c w
     return c
 \end{code}
@@ -94,7 +94,7 @@ single line.
 infixl 1 <|<<
 (<|<<) :: (ContainerClass c, WidgetClass w) => c -> IO w -> IO w
 container <|<< widget = do
-    widget >>= (containerAdd container)
+    widget >>= containerAdd container
     widget
 \end{code}
 
