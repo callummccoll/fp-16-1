@@ -60,7 +60,7 @@ main = do
     -- Get the assembly source code and all the environments from reading the
     -- file in the command line arguments.
     (assembly, envs) <- environmentFromArgs
-    -- Create the container and layout of the menu.
+    -- Contains all GUI elements.
     vbox <- vBoxNew False 10
     -- The container that contains all gui elements that must be redrawn when
     -- the user progresses through the emulation.
