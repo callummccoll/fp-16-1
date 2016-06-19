@@ -35,8 +35,7 @@ createMenu window f = do
             _ -> return ()
         widgetDestroy dialog
         return ()
-    exit `on` menuItemActivate $ do
-        liftIO $ mainQuit
+    exit `on` menuItemActivate $ liftIO mainQuit
     return menubar
 
 createToolbar :: [ToolItem] -> IO Toolbar
@@ -46,20 +45,18 @@ createToolbar items = do
     return bar
 
 insertItems :: Toolbar -> [ToolItem] -> Int -> IO ()
-insertItems bar items pos = do
-    case items of
-        []            -> return ()
-        item : items' -> do
-            toolbarInsert bar item pos
-            insertItems bar items' (pos + 1)
+insertItems bar items pos = case items of
+    []            -> return ()
+    item : items' -> do
+        toolbarInsert bar item pos
+        insertItems bar items' (pos + 1)
 
 createToolButtonFromStock :: StockId -> Bool -> Maybe (() -> IO ()) -> IO ToolButton
 createToolButtonFromStock stockId disabled f = do
     btn <- toolButtonNewFromStock stockId
-    widgetSetSensitive btn (disabled == False)
+    widgetSetSensitive btn (not disabled)
     case f of
         Nothing -> return btn
         Just f' -> do
-            onToolButtonClicked btn $ do
-                f' ()
+            onToolButtonClicked btn $ f' ()
             return btn
