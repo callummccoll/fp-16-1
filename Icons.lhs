@@ -49,7 +49,7 @@ is identical to the StockId for the icon.
 \begin{code}
 preloadIconFromDirectory :: FilePath -> String -> StockId -> IO ()
 preloadIconFromDirectory dir ext icon = do
-    file <- return (dir ++ "/" ++ (read $ show icon) ++ "." ++ ext)
+    let file = dir ++ "/" ++ read (show icon) ++ "." ++ ext
     preloadIcon file icon
 \end{code}
 
@@ -59,7 +59,7 @@ Preload an icon located at the given file path, identified by the given StockId.
 preloadIcon :: FilePath -> StockId -> IO ()
 preloadIcon path icon = do
     factory <- iconFactoryNew
-    set <- (imageNewFromFile path) >>= imageGetPixbuf >>= iconSetNewFromPixbuf
+    set <- imageNewFromFile path >>= imageGetPixbuf >>= iconSetNewFromPixbuf
     iconFactoryAdd factory icon set
     iconFactoryAddDefault factory
 \end{code}
