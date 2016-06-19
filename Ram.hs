@@ -1,6 +1,7 @@
 module Ram (createRamAndRegisters) where
 
 import Environment
+import GTKHelpers
 import Helpers
 import Operators
 import Presentation

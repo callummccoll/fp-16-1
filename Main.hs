@@ -3,6 +3,7 @@ module Main (main) where
 import Assembly
 import Emulation
 import Environment
+import GTKHelpers
 import Helpers
 import Icons
 import Menus
