@@ -1,13 +1,10 @@
-Provdes some helper function that are used throughout the application.
+The \highlighttt{Helpers} module provides some helper function that are used throughout the application.
 
 \begin{code}
 module Helpers where
 \end{code}
 
-Execute a function which changes the value of something based on the current
-value, however, only apply the change if it satisfies the predicate function.
-If it does not then the original value is returned, otherwise the new value is
-returned.
+\noindent The \highlighttt{changeWithPredicate p f x} function performs a change on a value only if the change satisfies some predicate.
 
 \begin{code}
 changeWithPredicate :: (a -> Bool) -> (a -> a) -> a -> a
@@ -17,13 +14,16 @@ changeWithPredicate p f x
   where x' = f x
 \end{code}
 
-Take a list of things that are showable and show each one, concatenate all of
-them and add new line characters in between them.  Returns the resulting string.
+\noindent The function executes \highlighttt{f} which is given \highlighttt{x} and returns a new value.  \highlighttt{p} is then invoked with the new value which returns a Bool indicating whether the new value is valid or not.  If the new value is valid then it is returned otherwise \highlighttt{x} is returned.
+
+\highlighttt{toLines xs} takes a list of things that are showable and shows each one, concatenates all of them and adds a new line characters in between them.
 
 \begin{code}
 toLines :: (Show a) => [a] -> String
 toLines xs = concat ((\x -> show x ++ "\n") <$> xs)
 \end{code}
+
+\noindent \highlighttt{strToInts str} converts a string to a list of ints.
 
 \begin{code}
 strToInts :: String -> IO [Int]
