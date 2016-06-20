@@ -1,5 +1,4 @@
-Defines several functions which make the process of creating and managing menus
-and toolbars easier.
+The \highlighttt{Menus} module defines several functions which make the process of creating and managing menus and toolbars easier.
 
 \begin{code}
 module Menus where
@@ -10,9 +9,7 @@ import Control.Applicative
 import Control.Monad.Trans
 \end{code}
 
-Create a button for a menu.
-
-Uses a callback function which is executed when the button has been activated.
+\noindent \highlighttt{createMenuItem label f} creates a button for a menu.  Uses a callback function which is executed when the button has been activated.
 
 \begin{code}
 createMenuItem :: String -> (() -> IO ()) -> IO MenuItem
@@ -22,35 +19,40 @@ createMenuItem label f = do
     return item
 \end{code}
 
-Create a button for a menu that open a file chooser dialog.
-
-Takes a label for the button, some text to display to the user when the file
-dialog opens, the window that owns the dialog and a callback function which is
-executed when the file has been chosen.
+\noindent \highlighttt{createFileChooser label instructions window f} creates a button for a menu that open a file chooser dialog.  Takes a label for the button, some text to display to the user when the file dialog opens, the window that owns the dialog and a callback function which is executed when the file has been chosen.
 
 \begin{code}
-createFileChooser :: String -> Maybe String -> Maybe Window -> (String -> IO ()) -> IO MenuItem
-createFileChooser label instructions window f = createMenuItem label (\_ -> do
-        dialog <- fileChooserDialogNew
-            instructions
-            window
-            FileChooserActionOpen
-            [("Open", ResponseAccept), ("Cancel", ResponseCancel)]
-        widgetShow dialog
-        response <- dialogRun dialog
-        case response of
-            ResponseAccept -> do
-                fileName <- fileChooserGetFilename dialog
-                case fileName of
-                    Just fileName' -> f fileName'
-                    Nothing        -> return ()
-            _ -> return ()
-        widgetDestroy dialog
-        return ()
+createFileChooser
+    :: String
+    -> Maybe String
+    -> Maybe Window
+    -> (String -> IO ())
+    -> IO MenuItem
+createFileChooser
+    label
+    instructions
+    window
+    f = createMenuItem label (\_ -> do
+            dialog <- fileChooserDialogNew
+                instructions
+                window
+                FileChooserActionOpen
+                [("Open", ResponseAccept), ("Cancel", ResponseCancel)]
+            widgetShow dialog
+            response <- dialogRun dialog
+            case response of
+                ResponseAccept -> do
+                    fileName <- fileChooserGetFilename dialog
+                    case fileName of
+                        Just fileName' -> f fileName'
+                        Nothing        -> return ()
+                _ -> return ()
+            widgetDestroy dialog
+            return ()
     )
 \end{code}
 
-Create a MenuBar and attach the given list of items to it.
+\noindent \highlighttt{createMenuBar items} creates a \highlighttt{MenuBar} and attaches the given list of \highlighttt{MenuItems} to it.
 
 \begin{code}
 createMenuBar :: (MenuItemClass i) => [i] -> IO MenuBar
@@ -60,9 +62,7 @@ createMenuBar items = do
     return bar
 \end{code}
 
-Create a Menu and attach the given list of items to it.
-
-This function should be used when creating sub menus of a MenuBar.
+\noindent \highlighttt{createMenu items} creates a \highlighttt{Menu} and attach the given list of \highlighttt{MenuItems} to it.  This function should be used when creating sub menus of a \highlighttt{MenuBar}.
 
 \begin{code}
 createMenu :: (MenuItemClass i) => [i] -> IO Menu
@@ -72,10 +72,14 @@ createMenu items = do
     return menu
 \end{code}
 
-Attach items to a menu.
+\noindent \highlighttt{attachItemsToMenu menu items} attaches items to a menu.
 
 \begin{code}
-attachItemsToMenu :: (MenuShellClass s, MenuItemClass i) => s -> [i] -> IO ()
+attachItemsToMenu
+    :: (MenuShellClass s, MenuItemClass i)
+    => s
+    -> [i]
+    -> IO ()
 attachItemsToMenu menu items = case items of
     [] -> return ()
     item : items' -> do
@@ -83,7 +87,7 @@ attachItemsToMenu menu items = case items of
         attachItemsToMenu menu items'
 \end{code}
 
-Create a Toolbar and attach the given ToolItems to it.
+\noindent \highlighttt{createToolbar items} creates a \highlighttt{Toolbar} and attaches \highlighttt{ToolItems} to it.
 
 \begin{code}
 createToolbar :: [ToolItem] -> IO Toolbar
@@ -93,7 +97,7 @@ createToolbar items = do
     return bar
 \end{code}
 
-Attach the given ToolItems to the given ToolBar starting at a specific position.
+\noindent \highlighttt{insertItems bar items pos} attaches \highlighttt{ToolItems} to a \highlighttt{ToolBar} starting at a specific position.
 
 \begin{code}
 insertItems :: Toolbar -> [ToolItem] -> Int -> IO ()
@@ -104,13 +108,14 @@ insertItems bar items pos = case items of
         insertItems bar items' (pos + 1)
 \end{code}
 
-Create a ToolButton from a StockId.
-
-This function takes the StockId, whether the button is disabled and an optional
-function which is executed when the button is pressed.
+\noindent \highlighttt{createToolButtonFromStock stockId disabled f} creates a \highlighttt{ToolButton} from a \highlighttt{StockId}.  This function takes the \highlighttt{StockId}, whether the button is disabled and an optional function which is executed when the button is pressed.
 
 \begin{code}
-createToolButtonFromStock :: StockId -> Bool -> Maybe (() -> IO ()) -> IO ToolButton
+createToolButtonFromStock
+    :: StockId
+    -> Bool
+    -> Maybe (() -> IO ())
+    -> IO ToolButton
 createToolButtonFromStock stockId disabled f = do
     btn <- toolButtonNewFromStock stockId
     widgetSetSensitive btn (not disabled)
