@@ -1,8 +1,4 @@
-This module is responsible for creating the RAM table and the registers.
-
-Therefore this module only supplies one public function which is
-createRamAndRegisters, this function simply creates the ram table and the
-registers from the environment and puts them inside a Frame.
+The \highlighttt{Ram} module is responsible for creating the RAM table and the registers.  Therefore this module only supplies one public function which is \highlighttt{createRamAndRegisters}, this function simply creates the ram table and the registers from the \highlighttt{Environment} and puts them inside a \highlighttt{Frame}.
 
 \begin{code}
 module Ram (createRamAndRegisters) where
@@ -19,10 +15,14 @@ import Data.Array.MArray
 import Data.IORef
 \end{code}
 
-A RegisterData contains:
-    - The registers name
-    - The value of the register
-    - A Color that is used when highlighting the row that the register on.
+\noindent \textbf{Type Synonyms\newline}
+
+\noindent A \highlighttt{RegisterData} contains:
+\begin{enumerate}
+\item The registers name
+\item The value of the register
+\item The \highlighttt{Color} that is used when highlighting the row that the registers value is pointing to.
+\end{enumerate}
 
 \begin{code}
 type RegisterData = (String, String, Color)
@@ -37,26 +37,27 @@ A RowData contains:
 type RowData = (Int, Maybe String, String)
 \end{code}
 
-A Row contains:
-    - The row number
-    - A Frame containing the row number
-    - A Frame containing the label
-    - A Frame containing the content.
+\noindent A \highlighttt{Row} contains:
+\begin{enumerate}
+\item The row number
+\item A \highlighttt{Frame} containing the row number
+\item A \highlighttt{Frame} containing the label
+\item A \highlighttt{Frame} containing the content
+\end{enumerate}
 
 \begin{code}
 type Row = (Int, Frame, Frame, Frame)
 \end{code}
 
-A RowFactory is simply a function that takes a RowData and creates a Row from
-it.
+\noindent A \highlighttt{RowFactory} is a function that takes a \highlighttt{RowData} and creates a \highlighttt{Row}.
 
 \begin{code}
 type RowFactory = RowData -> IO Row
 \end{code}
 
-Given the current Environment and whether we are running or not, build the RAM
-table and the registers.  This function returns the resulting Frame containing
-these widgets.
+\noindent \textbf{Functions\newline}
+
+\noindent \highlighttt{createRamAndRegisters env running} builds the RAM table and the registers.  This function returns the resulting \highlighttt{Frame} containing these widgets.
 
 \begin{code}
 createRamAndRegisters:: Environment -> Bool -> IO Frame
@@ -65,8 +66,7 @@ createRamAndRegisters env running = case eRAM env of
     Right ram -> getRamFromArray env running ram
 \end{code}
 
-Given the RAM that is within the array, create the RAM table and the registers,
-and place them in a Frame.
+\noindent \highlighttt{getRamFromArray env running ram} creates the ram and registers from the \highlighttt{ram} \highlighttt{Array}.  This function is also responsible for deciding what the highlight colours for the registers are, and uses them to create a \highlighttt{RowFactory}, before calling \highlighttt{createRam}.
 
 \begin{code}
 getRamFromArray :: Environment -> Bool -> Array Int Cell -> IO Frame
@@ -86,14 +86,7 @@ getRamFromArray env running ram = do
     createRam (extractRowData (elems ram) 0) factory registers
 \end{code}
 
-Extract the registers data from the given environment.
-
-This functions takes the Environment and two Colors.  The first represents the
-colour that the PC should highlight as, and the second represents the colour
-that the SP should highlight as and returns a list of RegisterData.
-
-The A register has a white highlight colour which means that the background of
-the cell that corresponds to the value of the A register does not change.
+\noindent \highlighttt{extractRegiseters env pcColor spColor} extracts the \highlighttt{RegisterData} from the given environment for the SP, PC and A registers. The A register has a white highlight colour which means that the background of the cell that corresponds to the value of the A register does not change.
 
 \begin{code}
 extractRegisters :: Environment -> Color -> Color -> IO [RegisterData]
@@ -104,8 +97,7 @@ extractRegisters env pcColor spColor = return [
     ]
 \end{code}
 
-Given a list of Cells and the starting row position, extract a RowData for each
-cell.
+\noindent \highlighttt{extractRowData cs pos} extracts the \highlighttt{RowData} from a list of \highlighttt{Cells}, starting at a row position.
 
 \begin{code}
 extractRowData :: [Cell] -> Int -> [RowData]
@@ -117,28 +109,31 @@ extractRowData cs pos = case cs of
         _            -> (pos, Nothing, "") : extractRowData cs' (pos + 1)
 \end{code}
 
-This function acts like a a RowFactory.
+\noindent \highlighttt{createRowWithColouredRegister (pc, pcColor) (sp, spColor)} acts like a \highlighttt{RowFactory}.  This is because the function takes two tuples which contain:
 
-This function takes two tuples which contain:
-    - An int representing the value of a register
-    - A Color which is used to highlight the row at the value of the register.
+\begin{enumerate}
+\item An int representing the value of a register
+\item A \highlighttt{Color} which is used to highlight the row at the value of the register.
+\end{enumerate}
 
-Given the two tuples, this function then takes a RowData and returns the Row,
-therefore it can be passed around as a RowFactory.
-
-This function creates a Row from a RowData, but ensures that if the row needs
-to be highlighted because it represents either the PC or SP then it will be.
+\noindent Given the two tuples, this function then takes a \highlighttt{RowData} and returns the \highlighttt{Row}, therefore it can be passed around as a RowFactory.  This function creates a Row from a RowData, but ensures that if the row needs to be highlighted because it represents either the PC or SP then it will be.
 
 \begin{code}
-createRowWithColouredRegister :: (Int, Color) -> (Int, Color) -> RowData -> IO Row
-createRowWithColouredRegister (pc, pcColor) (sp, spColor) (row, label, content)
-    | row == pc = createRow (row, label, content) pcColor
-    | row == sp = createRow (row, label, content) spColor
-    | otherwise = createRow (row, label, content) (Color 65535 65535 65535)
+createRowWithColouredRegister
+    :: (Int, Color)
+    -> (Int, Color)
+    -> RowData
+    -> IO Row
+createRowWithColouredRegister
+    (pc, pcColor)
+    (sp, spColor)
+    (row, label, content)
+        | row == pc = createRow (row, label, content) pcColor
+        | row == sp = createRow (row, label, content) spColor
+        | otherwise = createRow (row, label, content) (Color 65535 65535 65535)
 \end{code}
 
-Given a list of RowData, a RowFactory and a list of RegisterDatas, create the
-RAM table and the registers and place them in a Frame.
+\noindent \highlighttt{createRam rs rowFactory registers} creates the RAM table and the registers and places them in a \highlighttt{Frame}.
 
 \begin{code}
 createRam :: [RowData] -> RowFactory -> [RegisterData] -> IO Frame
@@ -148,7 +143,7 @@ createRam rs rowFactory registers = do
     hbox >|>> pad (5,5,5,5) >>|>> createFrame "Ram and Registers"
 \end{code}
 
-Given the RowData and a RowFactory, generate the RAM table.
+\noindent \highlighttt{createRamTable rs rowFactory} generates the RAM table from a list of \highlighttt{RowData} and a \highlighttt{RowFactory}.
 
 \begin{code}
 createRamTable :: [RowData] -> RowFactory -> IO Table
@@ -159,7 +154,7 @@ createRamTable rs rowFactory = do
     return table
 \end{code}
 
-Given a table and a list of Rows, attach each row to the table.
+\noindent \highlighttt{attachCellsToTable table rs} attaches each row in a list of \highlighttt{Rows} to a \highlighttt{Table}.
 
 \begin{code}
 attachCellsToTable :: Table -> [IO Row] -> IO ()
@@ -173,21 +168,16 @@ attachCellsToTable table rs = case rs of
         attachCellsToTable table rs'
 \end{code}
 
-Create the cell that contains the rows number.
+\noindent \highlighttt{createRowCell row} creates a \highlighttt{Frame} containing the row number.
 
 \begin{code}
 createRowCell :: Int -> IO Frame
-createRowCell row = do
-    frame <- frameNew
-    labelNew (Just (show row))
-        >>|>> padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1)
-        >>|> frame
+createRowCell row = labelNew (Just (show row))
+    >>|>> padWithAlignment (0, 0, 2, 2) (0.5, 0, 1, 1)
+    >>|>> frameNew
 \end{code}
 
-Create an entire row in the RAM table.
-
-This functions also takes a background colour which is used to highlight the 
-content cell.
+\noindent \highlighttt{createRow (row, label, content) color} creates an entire row in the RAM table.  This function changes the background colour of the content cell to the \highlighttt{color}.
 
 \begin{code}
 createRow :: RowData -> Color -> IO Row
@@ -208,7 +198,7 @@ createRow (row, label, content) color = do
     return (row, rowCell, label, content)
 \end{code}
 
-Create registers from a list of RegisterData and add them to a VBox.
+\noindent \highlighttt{createRegisters registers} creates registers from a list of \highlighttt{RegisterData} and adds them to a \highlighttt{VBox}.
 
 \begin{code}
 createRegisters :: [RegisterData] -> IO VBox
@@ -217,7 +207,7 @@ createRegisters registers = do
     addRegisters vbox (createRegister <$> registers)
 \end{code}
 
-Create a Register from a RegisterData.
+\noindent \highlighttt{createRegister (register, content, color)} creates a \highlighttt{Register} from a \highlighttt{RegisterData}.
 
 \begin{code}
 createRegister :: RegisterData -> IO HBox
@@ -231,7 +221,7 @@ createRegister (register, content, color) = do
     frame >|> hbox
 \end{code}
 
-Add registers to a vbox.
+\noindent \highlighttt{addRegisters vbox registers} adds a list of registers to a \highlighttt{VBox}.
 
 \begin{code}
 addRegisters :: VBox -> [IO HBox] -> IO VBox
