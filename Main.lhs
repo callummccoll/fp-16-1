@@ -66,6 +66,18 @@ main = do
     mainGUI
 \end{code}
 
+\noindent \textbf{Loading/Modifying Environment\newline}
+
+\noindent \highlighttt{currentEnvironment x envs} retrieves the current environment from an environments \highlighttt{Array}.
+
+\begin{code}
+currentEnvironment
+    :: IORef Int
+    -> Array Int Environment
+    -> IO Environment
+currentEnvironment x envs = readIORef x >>= (envs !)
+\end{code}
+
 \noindent \highlighttt{environmentFromArgs} fetches the assembly source code and the environments for that source code from loading the file specified in the command line arguments.
 
 \begin{code}
@@ -79,6 +91,36 @@ environmentFromArgs = do
             envs <- env >>= getFullProgEnv
             return (assembly, envs)
 \end{code}
+
+\noindent \highlighttt{environmentFromFile filename stdin} reads the contents of a file and create the initial environment from the contents. Returns the source code and the initial environment in a tuple.
+
+\begin{code}
+environmentFromFile :: String -> [Int] -> IO (String, IO Environment)
+environmentFromFile filename stdin = do
+    ass <- readFile filename
+    return (ass, makeEnvFromAss ass stdin)
+\end{code}
+
+\noindent \highlighttt{fileFromArgs} loads the assembly source code and stdin from the command line arguments.
+
+\begin{code}
+fileFromArgs :: IO (Maybe String, [Int])
+fileFromArgs = do
+    args <- getArgs
+    case args of
+        []            -> return (Nothing, [])
+        file : stdins -> return
+            (Just file, (\s -> read s :: Int) <$> (stdins >>= lines))
+\end{code}
+
+\noindent \highlighttt{resetCounter counter} resets the counter back to zero.
+
+\begin{code}
+resetCounter :: IORef Int -> IO ()
+resetCounter counter = modifyIORef' counter (const 0)
+\end{code}
+
+\noindent \textbf{Drawing\newline}
 
 \noindent \highlighttt{redrawFromFile container counter fileName} redraws everything in the container by extracting the assembly and environments from a file.  This function also resets the counter to 0 and stops the emulation from running.
 
@@ -96,27 +138,6 @@ redrawFromFile container counter fileName = do
     modifyIORef' counter (const 0)
     -- Draw the Window.
     redraw container counter assembly envs False
-\end{code}
-
-\noindent \highlighttt{fileFromArgs} loads the assembly source code and stdin from the command line arguments.
-
-\begin{code}
-fileFromArgs :: IO (Maybe String, [Int])
-fileFromArgs = do
-    args <- getArgs
-    case args of
-        []            -> return (Nothing, [])
-        file : stdins -> return
-            (Just file, (\s -> read s :: Int) <$> (stdins >>= lines))
-\end{code}
-
-\noindent \highlighttt{environmentFromFile filename stdin} reads the contents of a file and create the initial environment from the contents. Returns the source code and the initial environment in a tuple.
-
-\begin{code}
-environmentFromFile :: String -> [Int] -> IO (String, IO Environment)
-environmentFromFile filename stdin = do
-   ass <- readFile filename
-   return (ass, makeEnvFromAss ass stdin)
 \end{code}
 
 \noindent \highlighttt{redraw container counter assembly envs running} redraws everything in the container.  This involves removing everything in the container then adding it all back in.  This function delegates the actual drawing to \highlighttt{createDrawing} and simply removes everything from the container before delegating.
@@ -167,25 +188,6 @@ createDrawing container counter assembly envs running = do
     boxPackStart vbox bar PackNatural 0
     hbox >|> vbox >>|> container
     widgetShowAll container
-\end{code}
-
-\noindent \highlighttt{currentEnvironment x envs} retrieves the current environment from a environments \highlighttt{Array}.
-
-\begin{code}
-currentEnvironment
-    :: IORef Int
-    -> Array Int Environment
-    -> IO Environment
-currentEnvironment x envs = do
-    i <- readIORef x
-    return (envs ! i)
-\end{code}
-
-\noindent \highlighttt{resetCounter counter} resets the counter back to zero.
-
-\begin{code}
-resetCounter :: IORef Int -> IO ()
-resetCounter counter = modifyIORef' counter (const 0)
 \end{code}
 
 \noindent \highlighttt{createIO env running} creates the Stdin and Stdout \highlighttt{Frames} and adds them to a \highlighttt{VBox}.  This function returns the getter for the stdin text which is needed when attempting to retrieve the values for stdin and converting them to ints.

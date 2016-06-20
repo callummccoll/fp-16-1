@@ -26,11 +26,11 @@ containerAdd frame2 frame1
 return frame2
 \end{examplecode}
 
-\noindent As you can see the operators do minimize the amount of code that we have to write.
+\noindent As you can see the operators do minimize the amount of code that we have to write.\newline
 
-\paragraph{List Of Operators}
+\noindent \textbf{List Of Operators\newline}
 
-The \highlighttt{widget >|> container} operator adds a widget to a container.
+\noindent The \highlighttt{widget >|> container} operator adds a widget to a container.
 \begin{code}
 infixl 2 >|>
 (>|>) :: (ContainerClass c, WidgetClass w) => w -> c -> IO c
