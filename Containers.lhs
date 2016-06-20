@@ -1,5 +1,4 @@
-Defines several functions which make creating and managing gtk containers
-easier.
+The \highlighttt{Containers} module defines several functions which make creating and managing gtk containers easier.
 
 \begin{code}
 module Containers where
@@ -9,22 +8,14 @@ import Operators
 import "gtk3" Graphics.UI.Gtk
 \end{code}
 
-Create a text are within a frame.
-
-Takes a title, the content of the text area and whether the text area is
-editable.
+\noindent \highlighttt{createEmptyTextArea editable} creates an empty \highlighttt{TextView}, and takes a boolean value indicating whether it is editable.  To retrieve the text out of the \highlighttt{TextView}, use the \hyperref[source:containers:getTextViewsText]{getTextViewsText} function.
 
 \begin{code}
-createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
-createTextAreaFrame title content editable = do
-    frame <- case title of
-               Nothing -> frameNew
-               Just s  -> createFrame s
-    createTextArea content editable >>|>> pad (5, 5, 5, 5) >>|> frame
+createEmptyTextArea :: Bool -> IO TextView
+createEmptyTextArea editable = textViewNew >>:= [textViewEditable := editable]
 \end{code}
 
-Create a text area with some content and whether the text area is editable.
-
+\noindent \highlighttt{createTextArea content editable} creates a \highlighttt{TextView}.  Can take some content and a boolean indicating whether the \highlighttt{TextView}is editable or not.  To retrieve the text out of the text view, use the \hyperref[source:containers:getTextViewsText]{getTextViewsText} function.
 \begin{code}
 createTextArea :: Maybe String -> Bool -> IO TextView
 createTextArea content editable = case content of
@@ -38,14 +29,18 @@ createTextArea content editable = case content of
         return area
 \end{code}
 
-Create an empty text area and specify whether the text area is editable.
+\noindent \highlighttt{createTextAreaFrame title content editable} creates a \highlighttt{TextView} within a \highlighttt{Frame}.  By using this method you cannot easily retrive the \highlighttt{TextView} that was created, therefore you should only use this function to display text that does not change.
 
 \begin{code}
-createEmptyTextArea :: Bool -> IO TextView
-createEmptyTextArea editable = textViewNew >>:= [textViewEditable := editable]
+createTextAreaFrame :: Maybe String -> Maybe String -> Bool -> IO Frame
+createTextAreaFrame title content editable = do
+    frame <- case title of
+        Nothing -> frameNew
+        Just s  -> createFrame s
+    createTextArea content editable >>|>> pad (5, 5, 5, 5) >>|> frame
 \end{code}
 
-Create a frame with a centred title.
+\noindent \highlighttt{createFrame s} creates a \highlighttt{Frame} with a centred title.
 
 \begin{code}
 createFrame :: String -> IO Frame
@@ -56,6 +51,7 @@ createFrame s = do
     return frame
 \end{code}
 
+\noindent \highlighttt{getTextViewsText textView includeHidden}\label{source:containers:getTextViewsText} retrieves the content of a \highlighttt{TextView}.
 \begin{code}
 getTextViewsText :: (TextViewClass self) => self -> Bool -> IO String
 getTextViewsText textView includeHidden = do
@@ -65,21 +61,24 @@ getTextViewsText textView includeHidden = do
     textBufferGetText buffer start end includeHidden
 \end{code}
 
-Create a new Alignment that is padded by the specified amount.  This function
-aligns all text to the left and to the top.
+\noindent \highlighttt{pad (top, bottom, left, right)} creates a new \highlighttt{Alignment} that is padded by the specified amount.  This function aligns all text to the left and to the top.
 
 \begin{code}
 pad :: (Int, Int, Int, Int) -> IO Alignment
 pad padding = padWithAlignment padding (0, 0, 1, 1)
 \end{code}
 
-Create a new Alignment that is padded by the specified amount, but also is
-aligned according to the given values.
+\noindent \highlighttt{padWithAlignment (top, bottom, left, right) (xalign, yalign, xscale, yscale)} creates a new \highlighttt{Alignment} that is padded by the specified amount, but also is aligned according to the given values.
 
 \begin{code}
-padWithAlignment :: (Int, Int, Int, Int) -> (Float, Float, Float, Float) -> IO Alignment
-padWithAlignment (top, bottom, left, right) (xalign, yalign, xscale, yscale) = do
-    a <- alignmentNew xalign yalign xscale yscale
-    alignmentSetPadding a top bottom left right
-    return a
+padWithAlignment ::
+    (Int, Int, Int, Int)
+    -> (Float, Float, Float, Float)
+    -> IO Alignment
+padWithAlignment
+    (top, bottom, left, right)
+    (xalign, yalign, xscale, yscale) = do
+        a <- alignmentNew xalign yalign xscale yscale
+        alignmentSetPadding a top bottom left right
+        return a
 \end{code}
