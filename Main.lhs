@@ -201,7 +201,7 @@ createIO env running = do
     createTextAreaFrame
         (Just "Stdout")
         (Just (toLines $ eStdOut env)) False
-    >>|> vbox
+        >>|> vbox
     return (vbox, getTextViewsText stdin)
 \end{code}
 
