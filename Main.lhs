@@ -75,7 +75,9 @@ currentEnvironment
     :: IORef Int
     -> Array Int Environment
     -> IO Environment
-currentEnvironment x envs = readIORef x >>= (envs !)
+currentEnvironment x envs = do
+    i <- readIORef x
+    return (envs ! i)
 \end{code}
 
 \noindent \highlighttt{environmentFromArgs} fetches the assembly source code and the environments for that source code from loading the file specified in the command line arguments.
