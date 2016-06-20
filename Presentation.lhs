@@ -1,5 +1,4 @@
-Defines several functions that are responsible for formatting assembly symbols,
-so that they are presentable to the user.
+The \highlighttt{Presentation} module defines several functions that are responsible for formatting assembly symbols so that they are presentable to the user.
 
 \begin{code}
 module Presentation where
@@ -8,7 +7,7 @@ import Assembly
 import Environment
 \end{code}
 
-Represent an Instruction in a user readable format.
+\noindent \highlighttt{showInstruction i} represents an \highlighttt{Instruction} in a user readable format.
 
 \begin{code}
 showInstruction :: Instruction -> String
@@ -31,15 +30,14 @@ showInstruction i = case i of
     HALT _     -> "HALT"
 \end{code} 
 
-A helper function which takes a instruction as a string, a Source and a Dest,
-and presents them so that they are in a format which the user can read.
+\noindent \highlighttt{presentInstruction i s d} is a helper function which takes an instruction as a string, a \highlighttt{Source} and a \highlighttt{Dest}, and presents them so that they are in a format which the user can read.
 
 \begin{code}
 presentInstruction :: String -> Source -> Dest -> String
 presentInstruction i s d = i ++ " " ++ showSource s ++ " " ++ showDest d
 \end{code}
 
-Represent a Source in a user readable format.
+\noindent \highlighttt{showSource s} represents a \highlighttt{Source} in a user readable format.
 
 \begin{code}
 showSource :: Source -> String
@@ -48,7 +46,7 @@ showSource s = case sVal s of
     Right v -> showSourceValue v
 \end{code}
 
-Represent a Dest in a user readable format.
+\noindent \highlighttt{showDest d} represents a \highlighttt{Dest} in a user readable format.
 
 \begin{code}
 showDest :: Dest -> String
@@ -63,7 +61,7 @@ showDest d = case d of
     DIndirect _ l -> "(" ++ showLocation l ++ ")"
 \end{code}
 
-Represent a Location in a user readable format.
+\noindent \highlighttt{showLocation l} represents a \highlighttt{Location} in a user readable format.
 
 \begin{code}
 showLocation :: Location -> String
@@ -72,8 +70,7 @@ showLocation l = case lLoc l of
     Right v -> showValue v
 \end{code}
 
-Represent a Value which is the source of an Instruction in a user readable
-format.
+\noindent \highlighttt{showSourceValue v} represent a \highlighttt{Value} which is the source of an \highlighttt{Instruction} in a user readable format.
 
 \begin{code}
 showSourceValue :: Value -> String
@@ -82,8 +79,7 @@ showSourceValue v = case vVal v of
     Right ui -> "#" ++ showUInt ui
 \end{code}
 
-Represent a Value which is not the source of an Instruction in a user readable
-format.
+\noindent \highlighttt{showValue v} represents a \highlighttt{Value} which is not the source of an \highlighttt{Instruction} in a user readable format.
 
 \begin{code}
 showValue :: Value -> String
@@ -92,28 +88,28 @@ showValue v = case vVal v of
     Right ui -> showUInt ui
 \end{code}
 
-Represent an Identifier in a user readable format.
+\noindent \highlighttt{showIdentifier i} represents an \highlighttt{Identifier} in a user readable format.
 
 \begin{code}
 showIdentifier :: Identifier -> String
 showIdentifier = idName
 \end{code}
 
-Represent a Uint in a user readable format.
+\noindent \highlighttt{showUInt ui} represents a \highlighttt{Uint} in a user readable format.
 
 \begin{code}
 showUInt :: Uint -> String
 showUInt ui = show $ uiVal ui
 \end{code}
 
-Represent a Register in a user readable format.
+\noindent \highlighttt{showRegister r} represents a \highlighttt{Register} in a user readable format.
 
 \begin{code}
 showRegister :: Register -> String
 showRegister = rVal
 \end{code}
 
-Represent a CVal in a user readable format.
+\noindent \highlighttt{showCVal cv} represents a \highlighttt{CVal} in a user readable format.
 
 \begin{code}
 showCVal :: CVal -> String
