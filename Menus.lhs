@@ -4,9 +4,6 @@ The \highlighttt{Menus} module defines several functions which make the process 
 module Menus where
 
 import "gtk3" Graphics.UI.Gtk
-
-import Control.Applicative
-import Control.Monad.Trans
 \end{code}
 
 \noindent \highlighttt{createMenuItem label f} creates a button for a menu.  Uses a callback function which is executed when the button has been activated.
