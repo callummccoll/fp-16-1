@@ -4,6 +4,7 @@
 
 % prelude
 
+\usepackage{dirtree}
 \usepackage{fancyvrb}
 \usepackage{graphicx}
 \usepackage[pdftex, backref, colorlinks, bookmarksnumbered=true]{hyperref}
@@ -116,7 +117,7 @@ The first task of our group was to determine how we would create a GUI using Has
 
 The first test was using a HTML page with a small amount of JavaScript to make it interactive. A screenshot of the example page can be seen in figure~\ref{fig:WebTest}. The idea was that once a program was compiled, it could generate this page with the all the program states loaded in as data. By using HTML, this file could then be opened on any system and the program could be looked at again without needing to be recompiled. However, it also had the huge drawback that the HTML page could not communicate with the emulator, which was too big a drawback for this project.
 
-\begin{figure}[h]
+\begin{figure}[h!]
 \centering
 \includegraphics[width=300px]{WebScreenshot}
 \caption{Screenshot of Web display.}
@@ -125,12 +126,14 @@ The first test was using a HTML page with a small amount of JavaScript to make i
 
 The next step was to test GTK3, and an example application was also made for it. This test program used Glade to structure the application window and GTK3 to draw it to the screen. A screenshot of the test program can be seen in figure~\ref{fig:GTK3Test}. As a demo, it had very limited interactivity, allowing you to  step through a handwritten list of program states and nothing could be modified. It did demonstrate that GTK3 would indeed be suitable for the project, however the use of Glade to position elements on the window was not very useful as most of the windows ended up being built using code.
 
-\begin{figure}[h]
+\begin{figure}[h!]
 \centering
 \includegraphics[width=300px]{GTK3TestScreenshot}
 \caption{Screenshot of GTK3 test program.}
 \label{fig:GTK3Test}
 \end{figure}
+
+\newpage
 
 \subsubsection{The Final Product}
 While using Glade supplied a very nice proof-of-concept implementation, it became quite difficult to manage the dynamic nature of the program.  Therefore it was decided that attempting to complete the project using Glade was dropped for an entirely code based approach.
@@ -139,19 +142,21 @@ The final product follows from the proof-of-concept implementation but does of c
 
 The GUI runs in two states.  Firstly when the GUI first launches it is in "edit" mode.  This means that the assembly source code and stdin are editable.  Once the user wants to run the emulation they then press the "play" button.  This runs the emulation.  The user is then able to step through the program.
 
-\begin{figure}[h]
+\begin{figure}[h!]
     \centering
     \includegraphics[width=300px]{screen_shot}
     \caption{Screenshot of the Final Product}
     \label{fig:screen_shot}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[h!]
     \centering
     \includegraphics[width=300px]{screen_shot_running}
     \caption{Screenshot of the Final Product Running}
     \label{fig:screen_shot_running}
 \end{figure}
+
+\newpage
 
 \section{Design Details}
 Details about the design.
@@ -160,6 +165,40 @@ present the grammars, etc - No grammers for our project.
 - ? How to compile the project
 
 - ? Anything else you can think of?
+
+\subsection{Directory Structure}
+
+It is important to setup your directory structure to mimic the structure that was used during development:\newline
+
+\dirtree{%
+.1 machine.
+.2 parser.
+.3 ABR.
+.3 assembler.hs.
+.3 Assembly.hs.
+.3 SymbolTable.hs.
+.1 Visuals.
+.2 Containers.lhs.
+.2 countdown.ass.
+.2 Emulation.lhs.
+.2 Environment.lhs.
+.2 Helpers.lhs.
+.2 Icons.lhs.
+.2 Main.lhs.
+.2 Makefile.
+.2 Menus.lhs.
+.2 Operators.lhs.
+.2 Presentation.lhs.
+.2 Ram.lhs.
+.2 README.md.
+.2 test.ass.
+}
+
+\noindent \newline If you don't wish to follow this directory structure then you should change where the Makefile is looking for the assembly parser:
+
+\begin{examplecode}
+HCFLAGS = -fno-warn-tabs -ipath/to/machine/parser -XPackageImports
+\end{examplecode}
 
 \subsection{Compiling on Windows}
 Although GTK3 is a cross platform library, getting everything installed on windows to compile it with Haskell is actually quite hard. This tutorial was written based off instructions from multiple websites that were all out of date. 
