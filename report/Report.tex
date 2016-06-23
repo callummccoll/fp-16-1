@@ -243,6 +243,25 @@ In the same order as when you unpacked them above.
 \noindent \textbf{Step 4}: Done \\
 You're finally done and should be able to compile this project.
 
+\subsection{Compiling on Mac OSX}
+
+To setup gtk on the Mac OSX platform it is best to use the homebrew package manager:
+
+\begin{examplecode}
+    brew install gtk+
+    brew install gtk+3
+    brew install librsvg    
+\end{examplecode}
+
+\noindent Once gtk is installed on the system you can then use the cabal package manager to install gtk2hs and its dependencies:
+
+\begin{examplecode}
+    cabal install alex
+    cabal install happy
+    cabal install gtk -fhave-quartz-gtk
+    cabal install gtk3
+\end{examplecode}
+
 \section{Implementation}
 \subsection{Environment}
 \input{../Environment.lhs}
