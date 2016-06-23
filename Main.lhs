@@ -3,7 +3,6 @@ The \highlighttt{Main} module provides the main entry point of the application. 
 \begin{code}
 module Main (main) where
 
-import Assembly
 import Containers
 import Emulation
 import Environment
@@ -11,18 +10,13 @@ import Helpers
 import Icons
 import Menus
 import Operators
-import Presentation
 import Ram
 
 import "gtk3" Graphics.UI.Gtk
 
-import Control.Applicative
 import Control.Monad.Trans
-import Data.IORef
-import Data.Array.MArray
 import Data.Array
-import Data.Array.IO
-import Data.List
+import Data.IORef
 import System.Environment
 \end{code}
 
