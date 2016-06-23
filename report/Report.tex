@@ -81,10 +81,7 @@ Obviously the C language is very vast, so only a small subset was chosen to be i
 
 Our group was the Visuals Group and was assigned to create the Emulator and GUI. Our project was significantly different from the other two groups which were creating parsers. In general, Callum was responsible for creating the GUI and Andrew created the Emulator and Environment. There was overlap between those sections when designing the programming interface for the emulator and environment, however most of the work was separate. Since the emulator uses an assembly parse tree, we also had to work with the group creating that in order to connect them together.
 
-- ? More ? Maybe not. I dunno.
-
 \section{Process and Design}
-Describe process / design
 
 \subsection{Process}
 This project was approached using a prototyping methodology, where a design would be implemented, then assessed and modified or discarded. This approach was used as multiple different solutions were initially suggested for the implementation and each had to be tested and assessed. This method was also useful for filling in the blanks at the start of the project in regards to how it would work with the assembly parse tree, and how the GUI would interact with the emulator. This prototype method meant we could create a template for a part on how it may be designed, then easily update the program once that part was complete.
@@ -295,11 +292,13 @@ GTK3 runs everything through a main loop.  Therefore it uses an event-driven par
 
 It is important to understand how GTK3 organizes its objects so we are going to talk a little about how GTK works.  GTK3 is a c library but the gtk2hs project has organized everything into a type class hierarchy.  As such the \highlighttt{GObjectClass} is the type class that every glib object conforms to.  The next one down is the \highlighttt{WidgetClass}.  Everything that can be placed on the stage conforms to \highlighttt{WidgetClass}.
 
-If an object conforms to the \highlighttt{ContainerClass} then they are capable of containing other widgets.  \highlighttt{VBox} is a container that organizes its children into a vertical layout.  Where the first child is placed vertically above the second.  \highlighttt{HBox} is similar but it instead organizes its children in a horizontal layout.  The final object that is worth mentioning is \highlighttt{Frame}.  \highlighttt{Frame} is a container that displayes a rounded cornered box with a title.
+If an object conforms to the \highlighttt{ContainerClass} then they are capable of containing other widgets.  \highlighttt{VBox} is a container that organizes its children into a vertical layout.  Where the first child is placed vertically above the second.  \highlighttt{HBox} is similar but it instead organizes its children in a horizontal layout.  The final object that is worth mentioning is \highlighttt{Frame}.  \highlighttt{Frame} is a container that displays a rounded cornered box with a title.
+
+For more information on GTK I would recommend \href{http://hackage.haskell.org/package/gtk-0.12.3/docs/Graphics-UI-Gtk.html}{the API for the gtk2hs module.}
 
 \subsubsection{Structure}
 
-The GUI implementation is separated into several modules, Figure \ref{fig:guimodules} shows how each of these modules relate to each other.
+The GUI implementation is separated into several modules, Figure \ref{fig:guimodules} shows which of these modules depend on each other.
 
 \begin{figure}[h!]
 \centering
@@ -365,7 +364,7 @@ Main: CALL read
 
 \subsection{GUI}
 
-Figures~\ref{fig:screen_shot} and~ \ref{fig:screen_shot_running} show the final product when the assembly is editable and when it is running the emulation.
+Figures~\ref{fig:screen_shot} and~ \ref{fig:screen_shot_running} show the final product when the application is in edit mode and when it is running the emulation.
 
 \begin{figure}[h!]
     \centering
@@ -384,9 +383,34 @@ Figures~\ref{fig:screen_shot} and~ \ref{fig:screen_shot_running} show the final 
 \newpage
 
 \section{Conclusion}
-- ? Something goes here.
 
 \subsection{Callum McColl's Reflection}
+
+During the creation of the GUI I felt that haskell allowed me to accomplish much more in much less code.  It also allowed me to get to grips with the differences in how one might go about an implementation in a procedural language versus a functional language.  For instance some tasks which I found to be trivial in a procedural language became quite cumbersome for the uninitiated in the functional world.  One example of this is with the counter that is used to keep track of which step the user is on in the emulation.  In a procedural language you would simply create an int and increment it and that would be that, however in a functional world, things get monaddy really quick.
+
+One of the things that I will take from this project is that it further progressed my knowledge with respect to Functors, Applicatives and Monads.  At the start of the semester I still did not have a firm grasp on these concepts but by the end, I think that I have a firm understanding.
+
+The main chore of haskell (that I found) is the fact that I must pass the things I need to every function I call, and since I have a lot of functions, it means that I am passing around the same stuff all the time.  In the Main module I am passing around: the assembly source code, the emulation counter, the array of environments, a bool indicating whether the app is running and the container that I am drawing everything in.  Now it became obvious to me after I completed the implementation that I should have created a separate data structure which contained these things and simply passed that around, but then I would have to deal with the fact that I cannot mutate this thing and if I want to change anything, I would have to create a new one.  However, I do think that this is better than the current approach.
+
+The type system caused some grief for me as it can be strict when I don't want it to be and very loose when I want it to be strict.  An example of this is in the Icons module.  In the Icons module I have defined several icons which have a type of \highlighttt{StockId}.  \highlighttt{StockId} itself is just a type synonym for \highlighttt{String}.  But does this mean that I can create a \highlighttt{StockId} from a string literal?
+
+\begin{examplecode}
+    playButton :: StockId
+    playButton = "media-playback-start"
+\end{examplecode}
+
+\noindent Nope:
+
+\begin{examplecode}
+    playButton :: StockId
+    playButton = fromString "media-playback-start"
+\end{examplecode}
+
+\noindent These sorts of problems become hard to solve for someone who may not be very familiar with the haskell Prelude, but this is more of an experience with the language thing as opposed to a gripe about functional programming.
+
+What I loved about functional programming is the higher order functions.  Just with the use of \highlighttt{map}, you can hide away the fact that you have many things or just one.  Many times the answer to a problem was "Oh, I'll just map this function over it".  The higher order functions are very powerful and very easy to use.
+
+Overall the functional programming concepts that I learned are generally orthogonal to the concepts of object oriented programming and as such can be used in traditional programming languages.  Therefore I see the concepts taught and learned in the course as extra tools to use as a software developer.
 
 \subsection{Andrew Paroz's Reflection}
 On a whole I feel this project ran fairly well. I know out of everyone in the group I had the most free time since this was basically my only course, so I tried to jump in an do something wherever I could. Between Callum and myself things worked good and we were able to put our two parts together at the end fairly easily. We've worked together many times before so this was really nothing new to us. Using Slack to communicate between everyone seemed to be really useful and I found it a really good way to get in contact with other right away when I was having problems.
