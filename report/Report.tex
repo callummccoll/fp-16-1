@@ -138,61 +138,40 @@ The next step was to test GTK3, and an example application was also made for it.
 \subsubsection{The Final Product}
 While using Glade supplied a very nice proof-of-concept implementation, it became quite difficult to manage the dynamic nature of the program.  Therefore it was decided that attempting to complete the project using Glade was dropped for an entirely code based approach.
 
-The final product follows from the proof-of-concept implementation but does of course emulate the assembly source code that it is given.  Unfortunately the C parsing was not completed so it was decided to abandon the C frame which is shown in the proof-of-concept implementation for more screen real estate.  The GUI has a main menu bar at the top which can be used to open other assembly source files.  Below the menu is a tool bar which presents play, stop, previous and next buttons.  This allows us to modify the assembly code and then run it much like other IDE's allow you to do.  Figures~\ref{fig:screen_shot} and~ \ref{fig:screen_shot_running} show the final product when the assembly is editable and when it is begin emulated.
+The final product follows from the proof-of-concept implementation but does of course emulate the assembly source code that it is given.  Unfortunately the C parsing was not completed so it was decided to abandon the C frame which is shown in the proof-of-concept implementation for more screen real estate.  The GUI has a main menu bar at the top which can be used to open other assembly source files.  Below the menu is a tool bar which presents play, stop, previous and next buttons.  This allows us to modify the assembly code and then run it much like other IDE's allow you to do.
 
-The GUI runs in two states.  Firstly when the GUI first launches it is in "edit" mode.  This means that the assembly source code and stdin are editable.  Once the user wants to run the emulation they then press the "play" button.  This runs the emulation.  The user is then able to step through the program.
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=300px]{screen_shot}
-    \caption{Screenshot of the Final Product}
-    \label{fig:screen_shot}
-\end{figure}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=300px]{screen_shot_running}
-    \caption{Screenshot of the Final Product Running}
-    \label{fig:screen_shot_running}
-\end{figure}
-
-\newpage
+The GUI runs in two states.  When the GUI first launches it is in "edit" mode.  This means that the assembly source code and stdin are editable.  Once the user wants to run the emulation they then press the "play" button.  This runs the emulation.  The user is then able to step through the program.
 
 \section{Design Details}
-Details about the design.
-present the grammars, etc - No grammers for our project.
 
-- ? How to compile the project
-
-- ? Anything else you can think of?
-
+\begin{minipage}{\linewidth}
 \subsection{Directory Structure}
 
 It is important to setup your directory structure to mimic the structure that was used during development:\newline
-
 \dirtree{%
-.1 machine.
-.2 parser.
-.3 ABR.
-.3 assembler.hs.
-.3 Assembly.hs.
-.3 SymbolTable.hs.
-.1 Visuals.
-.2 Containers.lhs.
-.2 countdown.ass.
-.2 Emulation.lhs.
-.2 Environment.lhs.
-.2 Helpers.lhs.
-.2 Icons.lhs.
-.2 Main.lhs.
-.2 Makefile.
-.2 Menus.lhs.
-.2 Operators.lhs.
-.2 Presentation.lhs.
-.2 Ram.lhs.
-.2 README.md.
-.2 test.ass.
+    .1 machine.
+    .2 parser.
+    .3 ABR.
+    .3 assembler.hs.
+    .3 Assembly.hs.
+    .3 SymbolTable.hs.
+    .1 Visuals.
+    .2 Containers.lhs.
+    .2 countdown.ass.
+    .2 Emulation.lhs.
+    .2 Environment.lhs.
+    .2 Helpers.lhs.
+    .2 Icons.lhs.
+    .2 Main.lhs.
+    .2 Makefile.
+    .2 Menus.lhs.
+    .2 Operators.lhs.
+    .2 Presentation.lhs.
+    .2 Ram.lhs.
+    .2 README.md.
+    .2 test.ass.
 }
+\end{minipage}
 
 \noindent \newline If you don't wish to follow this directory structure then you should change where the Makefile is looking for the assembly parser:
 
@@ -385,6 +364,24 @@ Main: CALL read
 \end{figure}
 
 \subsection{GUI}
+
+Figures~\ref{fig:screen_shot} and~ \ref{fig:screen_shot_running} show the final product when the assembly is editable and when it is running the emulation.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=300px]{screen_shot}
+    \caption{Screenshot of the Final Product}
+    \label{fig:screen_shot}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=300px]{screen_shot_running}
+    \caption{Screenshot of the Final Product Running The Emulation}
+    \label{fig:screen_shot_running}
+\end{figure}
+
+\newpage
 
 \section{Conclusion}
 - ? Something goes here.
